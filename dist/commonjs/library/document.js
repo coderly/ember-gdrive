@@ -1,5 +1,5 @@
 "use strict";
-var Reference = require("appkit/lib/google-drive/reference")["default"];
+var Reference = require("./reference")["default"];
 
 var Document = Ember.Object.extend(Ember.Evented, {
   id: Ember.computed.alias('file.id'),

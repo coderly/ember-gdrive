@@ -280,8 +280,6 @@ define("library/change-observer",
   ["exports"],
   function(__exports__) {
     "use strict";
-    window.vals = [];
-
     __exports__["default"] = Ember.Object.extend(Ember.ActionHandler, {
       ref: null,
       target: null,
@@ -383,7 +381,7 @@ define("library/document-source",
     });
   });
 define("library/document", 
-  ["appkit/lib/google-drive/reference","exports"],
+  ["./reference","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
     var Reference = __dependency1__["default"];
@@ -576,7 +574,45 @@ define("library/document",
 
     __exports__["default"] = Document;
   });
-define("library/file-picker", 
+define("library/loader", 
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+    var loader = {};
+
+    loader.load = function() {
+      var loaded = 0, libraryCount = 4;
+
+      return new Ember.RSVP.Promise(function(resolve, reject) {
+        gapi.load('auth:client,drive-realtime,drive-share', function() {
+
+          gapi.client.load('oauth2', 'v2', function() {
+            loaded++;
+            if (loaded >= libraryCount) resolve();
+          });
+
+          gapi.client.load('drive', 'v2', function() {
+            loaded++;
+            if (loaded >= libraryCount) resolve();
+          });
+
+          gapi.load('drive-share', function() {
+            loaded++;
+            if (loaded >= libraryCount) resolve();
+          });
+
+          gapi.load('picker', function() {
+            loaded++;
+            if (loaded >= libraryCount) resolve();
+          });
+
+        });
+      });
+    };
+
+    __exports__["default"] = loader;
+  });
+define("library/picker", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -615,44 +651,6 @@ define("library/file-picker",
       }
 
     });
-  });
-define("library/loader", 
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-    var loader = {};
-
-    loader.load = function() {
-      var loaded = 0, libraryCount = 4;
-
-      return new Ember.RSVP.Promise(function(resolve, reject) {
-        gapi.load('auth:client,drive-realtime,drive-share', function() {
-
-          gapi.client.load('oauth2', 'v2', function() {
-            loaded++;
-            if (loaded >= libraryCount) resolve();
-          });
-
-          gapi.client.load('drive', 'v2', function() {
-            loaded++;
-            if (loaded >= libraryCount) resolve();
-          });
-
-          gapi.load('drive-share', function() {
-            loaded++;
-            if (loaded >= libraryCount) resolve();
-          });
-
-          gapi.load('picker', function() {
-            loaded++;
-            if (loaded >= libraryCount) resolve();
-          });
-
-        });
-      });
-    };
-
-    __exports__["default"] = loader;
   });
 define("library/reference", 
   ["exports"],
@@ -864,8 +862,6 @@ define("library/reference",
       }
     };
 
-
-    window.Reference = MapReference;
     __exports__["default"] = MapReference;
   });
 define("library/serializer", 
@@ -1010,17 +1006,27 @@ define("library/uuid",
     }
   });
 define("library", 
-  ["./my_library/adapter","./my_library/auth","./my_library/docyment","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
+  ["./my_library/adapter","./my_library/auth","./my_library/document","./my_library/document-source","./my_library/picker","./my_library/reference","./my_library/share-dialog","./my_library/state","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __exports__) {
     "use strict";
     var Adapter = __dependency1__["default"];
     var Auth = __dependency2__["default"];
     var Document = __dependency3__["default"];
+    var DocumentSource = __dependency4__["default"];
+    var FilePicker = __dependency5__["default"];
+    var Reference = __dependency6__["default"];
+    var ShareDialog = __dependency7__["default"];
+    var State = __dependency8__["default"];
 
     var GDrive = {
       Adapter: Adapter,
       Auth: Auth,
-      Document: Document
+      Document: Document,
+      DocumentSource: DocumentSource,
+      FilePicker: FilePicker,
+      Reference: Reference,
+      ShareDialog: ShareDialog,
+      State: State
     };
 
     __exports__.GDrive = GDrive;

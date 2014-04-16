@@ -205,6 +205,4 @@ var serialize = function(object) {
   }
 };
 
-
-window.Reference = MapReference;
 exports["default"] = MapReference;

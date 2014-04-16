@@ -1,6 +1,4 @@
 "use strict";
-window.vals = [];
-
 exports["default"] = Ember.Object.extend(Ember.ActionHandler, {
   ref: null,
   target: null,
