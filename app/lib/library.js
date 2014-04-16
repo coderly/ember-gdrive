@@ -1,11 +1,11 @@
-import Adapter from "./my_library/adapter";
-import Auth from "./my_library/auth";
-import Document from "./my_library/document";
-import DocumentSource from "./my_library/document-source";
-import FilePicker from "./my_library/picker";
-import Reference from "./my_library/reference";
-import ShareDialog from "./my_library/share-dialog";
-import State from "./my_library/state";
+import Adapter from "ember-gdrive/adapter";
+import Auth from "ember-gdrive/auth";
+import Document from "ember-gdrive/document";
+import DocumentSource from "ember-gdrive/document-source";
+import FilePicker from "ember-gdrive/picker";
+import Reference from "ember-gdrive/reference";
+import ShareDialog from "ember-gdrive/share-dialog";
+import State from "ember-gdrive/state";
 
 var GDrive = {
   Adapter: Adapter,

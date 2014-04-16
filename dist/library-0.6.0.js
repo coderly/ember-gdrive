@@ -1005,8 +1005,8 @@ define("ember-gdrive/uuid",
       return id;
     }
   });
-define("library", 
-  ["./my_library/adapter","./my_library/auth","./my_library/document","./my_library/document-source","./my_library/picker","./my_library/reference","./my_library/share-dialog","./my_library/state","exports"],
+define("ember-gdrive", 
+  ["ember-gdrive/adapter","ember-gdrive/auth","ember-gdrive/document","ember-gdrive/document-source","ember-gdrive/picker","ember-gdrive/reference","ember-gdrive/share-dialog","ember-gdrive/state","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __exports__) {
     "use strict";
     var Adapter = __dependency1__["default"];

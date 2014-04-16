@@ -1,10 +1,6 @@
 function nameFor(path) {
-  var result,  match;
-  if (match = path.match(/^(?:lib|test|test\/tests)\/(.*?)(?:\.js)?$/)) {
-    result = match[1];
-  } else {
-    result = path;
-  }
+  if (path == 'library')
+    return "ember-gdrive";
 
   var regex = /^library\//;
   return path.replace(regex, "ember-gdrive/");
