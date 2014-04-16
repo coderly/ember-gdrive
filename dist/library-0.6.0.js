@@ -1079,7 +1079,6 @@ define("ember-gdrive",
   ["ember-gdrive/router-auth","ember-gdrive/boot"],
   function(__dependency1__, __dependency2__) {
     "use strict";
-    var _ = __dependency1__["default"];
-    var _ = __dependency2__["default"];
+
   });
 }());

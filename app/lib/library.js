@@ -1,2 +1,2 @@
-import _ from 'ember-gdrive/router-auth';
-import _ from 'ember-gdrive/boot';
+import 'ember-gdrive/router-auth';
+import 'ember-gdrive/boot';
