@@ -6,7 +6,8 @@ function nameFor(path) {
     result = path;
   }
 
-  return path;
+  var regex = /^library\//;
+  return path.replace(regex, "ember-gdrive/");
 }
 
 module.exports = {

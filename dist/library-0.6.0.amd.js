@@ -1,4 +1,4 @@
-define("library/adapter", 
+define("ember-gdrive/adapter", 
   ["./uuid","./document","./change-observer","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
@@ -129,7 +129,7 @@ define("library/adapter",
 
     });
   });
-define("library/auth", 
+define("ember-gdrive/auth", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -275,7 +275,7 @@ define("library/auth",
       }
     });
   });
-define("library/change-observer", 
+define("ember-gdrive/change-observer", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -371,7 +371,7 @@ define("library/change-observer",
 
     });
   });
-define("library/document-source", 
+define("ember-gdrive/document-source", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -379,7 +379,7 @@ define("library/document-source",
       id: null
     });
   });
-define("library/document", 
+define("ember-gdrive/document", 
   ["./reference","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -573,7 +573,7 @@ define("library/document",
 
     __exports__["default"] = Document;
   });
-define("library/loader", 
+define("ember-gdrive/loader", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -611,7 +611,7 @@ define("library/loader",
 
     __exports__["default"] = loader;
   });
-define("library/picker", 
+define("ember-gdrive/picker", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -651,7 +651,7 @@ define("library/picker",
 
     });
   });
-define("library/reference", 
+define("ember-gdrive/reference", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -863,7 +863,7 @@ define("library/reference",
 
     __exports__["default"] = MapReference;
   });
-define("library/serializer", 
+define("ember-gdrive/serializer", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -894,7 +894,7 @@ define("library/serializer",
 
     });
   });
-define("library/share-dialog", 
+define("ember-gdrive/share-dialog", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -911,7 +911,7 @@ define("library/share-dialog",
       }
     });
   });
-define("library/state", 
+define("ember-gdrive/state", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -967,7 +967,7 @@ define("library/state",
       folderID: Ember.computed.alias('state.folderId')
     });
   });
-define("library/uuid", 
+define("ember-gdrive/uuid", 
   ["exports"],
   function(__exports__) {
     "use strict";
