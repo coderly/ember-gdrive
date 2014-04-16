@@ -1,4 +1,5 @@
 {
+  name: "ember-gdrive",
   "version": "0.6.0",
   "description": "Google Drive bindings for Ember Data",
   "main": ["./dist/library-0.6.0.js"],
