@@ -1,0 +1,27 @@
+{
+  "version": "0.6.0",
+  "description": "Google Drive bindings for Ember Data",
+  "main": ["./dist/library-0.6.0.js"],
+  "dependencies": {
+    "ember": ">=1.4.0 < 2.0.0",
+    "ember-data": "~1.0.0-beta.7"
+  },
+  "keywords": [
+    "Google Drive",
+    "realtime",
+    "ember data"
+  ],
+  "ignore": [
+    ".jshintrc",
+    "README.md",
+    "Gruntfile.js",
+    "package.json",
+    "examples/",
+    "node_modules",
+    "app/",
+    "test/",
+    "tasks/",
+    "CHANGELOG.md"
+  ]
+}
+
