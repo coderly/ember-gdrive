@@ -275,6 +275,62 @@ define("ember-gdrive/auth",
       }
     });
   });
+define("ember-gdrive/boot", 
+  ["ember-gdrive/auth","ember-gdrive/document-source","ember-gdrive/loader","ember-gdrive/adapter","ember-gdrive/serializer"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__) {
+    "use strict";
+    var GoogleDriveAuth = __dependency1__["default"];
+    var DocumentSource = __dependency2__["default"];
+    var loader = __dependency3__["default"];
+
+    var GoogleDriveAdapter = __dependency4__["default"];
+    var GoogleDriveSerializer = __dependency5__["default"];
+
+    /**
+     Register the serializer and adapter
+     */
+    Ember.onLoad('Ember.Application', function(Application) {
+
+      Application.initializer({
+        name: 'google-drive',
+        after: 'store',
+        initialize: function(container, application) {
+          application.register('adapter:-google-drive', GoogleDriveAdapter);
+          application.register('serializer:-google-drive', GoogleDriveSerializer);
+
+          application.register('document-source:main', DocumentSource);
+          application.inject('route', 'documentSource', 'document-source:main');
+          application.inject('adapter:application', 'documentSource', 'document-source:main');
+        }
+      });
+
+      Application.initializer({
+        name: 'requireGoogleLibraries',
+        before: 'googleDrive',
+        initialize: function(container, application) {
+          application.deferReadiness();
+          loader.load().then(function() {
+            application.advanceReadiness();
+          });
+        }
+      });
+
+      Application.initializer({
+        name: "googleDrive",
+        before: "store",
+
+        initialize: function(container, application) {
+          application.register('auth:google', GoogleDriveAuth);
+
+          application.inject('controller', 'auth', 'auth:google');
+          application.inject('route', 'auth', 'auth:google');
+
+          var auth = container.lookup('auth:google');
+        }
+      });
+
+    });
+  });
 define("ember-gdrive/change-observer", 
   ["exports"],
   function(__exports__) {
@@ -863,6 +919,20 @@ define("ember-gdrive/reference",
 
     __exports__["default"] = MapReference;
   });
+define("ember-gdrive/router-auth", 
+  [],
+  function() {
+    "use strict";
+    Ember.Route.reopen({
+      requiresAuth: false,
+      beforeModel: function() {
+        if (this.get('requiresAuth')) {
+          var auth = this.get('auth');
+          return auth.checkStatus();
+        }
+      }
+    });
+  });
 define("ember-gdrive/serializer", 
   ["exports"],
   function(__exports__) {
@@ -1005,28 +1075,9 @@ define("ember-gdrive/uuid",
     }
   });
 define("ember-gdrive", 
-  ["ember-gdrive/adapter","ember-gdrive/auth","ember-gdrive/document","ember-gdrive/document-source","ember-gdrive/picker","ember-gdrive/reference","ember-gdrive/share-dialog","ember-gdrive/state","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __exports__) {
+  ["ember-gdrive/router-auth","ember-gdrive/boot"],
+  function(__dependency1__, __dependency2__) {
     "use strict";
-    var Adapter = __dependency1__["default"];
-    var Auth = __dependency2__["default"];
-    var Document = __dependency3__["default"];
-    var DocumentSource = __dependency4__["default"];
-    var FilePicker = __dependency5__["default"];
-    var Reference = __dependency6__["default"];
-    var ShareDialog = __dependency7__["default"];
-    var State = __dependency8__["default"];
-
-    var GDrive = {
-      Adapter: Adapter,
-      Auth: Auth,
-      Document: Document,
-      DocumentSource: DocumentSource,
-      FilePicker: FilePicker,
-      Reference: Reference,
-      ShareDialog: ShareDialog,
-      State: State
-    };
-
-    __exports__.GDrive = GDrive;
+    var _ = __dependency1__["default"];
+    var _ = __dependency2__["default"];
   });
