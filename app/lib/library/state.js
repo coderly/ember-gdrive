@@ -8,29 +8,17 @@ var queryParams = function() {
 
 export default Ember.Object.extend({
 
-  application: Ember.required(),
-
-  redirectToFileIfProvided: function() {
-    if (this.fileProvided()) {
-      this.redirectToFile(this.get('fileID'));
-    }
-  },
-
-  redirectToFile: function(fileID) {
-    window.location = this.redirectToFilePath(fileID);
-  },
-
-  redirectToFilePath: function(fileID) {
-    return window.location.pathname + '#/project/' + fileID;
-  },
-
   fileID: function() {
     return this.get('fileIDs').objectAt(0);
   }.property('fileIDs'),
 
-  fileProvided: function() {
-    return this.get('action') == 'open' && this.get('fileIDs');
-  },
+  isOpen: function() {
+    return this.get('action') == 'open';
+  }.property('action'),
+
+  isCreate: function() {
+    return this.get('action') == 'create';
+  }.property('action'),
 
   queryParams: function() {
     return queryParams();

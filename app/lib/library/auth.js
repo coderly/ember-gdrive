@@ -2,7 +2,7 @@ var INSTALL_SCOPE = 'https://www.googleapis.com/auth/drive.install',
     FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file',
     OPENID_SCOPE = 'openid';
 
-export default Ember.StateManager.extend({
+var Auth = Ember.StateManager.extend({
   enableLogging: false,
   initialState: 'loggedOut',
 
@@ -18,17 +18,6 @@ export default Ember.StateManager.extend({
   token: function() {
     return gapi.auth.getToken().access_token;
   }.property('currentState'),
-
-  whenLoggedIn: function(handler) {
-    if (this.get('isLoggedIn')) {
-      handler();
-    }
-    else {
-      this.one('loggedin', function() {
-        handler();
-      });
-    }
-  },
 
   checkStatus: function() {
     if (this.get('isAuthenticated')) {
@@ -139,3 +128,5 @@ export default Ember.StateManager.extend({
     })
   }
 });
+
+export default Auth;

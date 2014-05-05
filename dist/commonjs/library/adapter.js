@@ -3,7 +3,7 @@ var uuid = require("./uuid")["default"];
 var Document = require("./document")["default"];
 var ChangeObserver = require("./change-observer")["default"];
 
-exports["default"] = DS.Adapter.extend(Ember.ActionHandler, {
+var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
 
   documentSource: null,
   documentId: Ember.computed.alias('documentSource.id'),
@@ -125,3 +125,5 @@ exports["default"] = DS.Adapter.extend(Ember.ActionHandler, {
   }
 
 });
+
+exports["default"] = Adapter;

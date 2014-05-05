@@ -12,7 +12,7 @@ var serializeRecordPolymorphicId = function(record) {
   }
 };
 
-exports["default"] = DS.JSONSerializer.extend({
+var Serializer = DS.JSONSerializer.extend({
 
   serializeHasMany: function(record, json, relationship) {
     var key = relationship.key,
@@ -25,3 +25,5 @@ exports["default"] = DS.JSONSerializer.extend({
   }
 
 });
+
+exports["default"] = Serializer;

@@ -7,7 +7,7 @@ define("ember-gdrive/adapter",
     var Document = __dependency2__["default"];
     var ChangeObserver = __dependency3__["default"];
 
-    __exports__["default"] = DS.Adapter.extend(Ember.ActionHandler, {
+    var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
 
       documentSource: null,
       documentId: Ember.computed.alias('documentSource.id'),
@@ -129,6 +129,8 @@ define("ember-gdrive/adapter",
       }
 
     });
+
+    __exports__["default"] = Adapter;
   });
 define("ember-gdrive/auth", 
   ["exports"],
@@ -138,7 +140,7 @@ define("ember-gdrive/auth",
         FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file',
         OPENID_SCOPE = 'openid';
 
-    __exports__["default"] = Ember.StateManager.extend({
+    var Auth = Ember.StateManager.extend({
       enableLogging: false,
       initialState: 'loggedOut',
 
@@ -154,17 +156,6 @@ define("ember-gdrive/auth",
       token: function() {
         return gapi.auth.getToken().access_token;
       }.property('currentState'),
-
-      whenLoggedIn: function(handler) {
-        if (this.get('isLoggedIn')) {
-          handler();
-        }
-        else {
-          this.one('loggedin', function() {
-            handler();
-          });
-        }
-      },
 
       checkStatus: function() {
         if (this.get('isAuthenticated')) {
@@ -275,10 +266,12 @@ define("ember-gdrive/auth",
         })
       }
     });
+
+    __exports__["default"] = Auth;
   });
 define("ember-gdrive/boot", 
-  ["ember-gdrive/auth","ember-gdrive/document-source","ember-gdrive/loader","ember-gdrive/adapter","ember-gdrive/serializer"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__) {
+  ["ember-gdrive/auth","ember-gdrive/document-source","ember-gdrive/loader","ember-gdrive/adapter","ember-gdrive/serializer","ember-gdrive/document","ember-gdrive/state"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__) {
     "use strict";
     var GoogleDriveAuth = __dependency1__["default"];
     var DocumentSource = __dependency2__["default"];
@@ -286,6 +279,9 @@ define("ember-gdrive/boot",
 
     var GoogleDriveAdapter = __dependency4__["default"];
     var GoogleDriveSerializer = __dependency5__["default"];
+    var GoogleDriveDocument = __dependency6__["default"];
+
+    var State = __dependency7__["default"];
 
     /**
      Register the serializer and adapter
@@ -307,7 +303,7 @@ define("ember-gdrive/boot",
 
       Application.initializer({
         name: 'requireGoogleLibraries',
-        before: 'googleDrive',
+        before: 'googleDriveAuth',
         initialize: function(container, application) {
           application.deferReadiness();
           loader.load().then(function() {
@@ -317,7 +313,7 @@ define("ember-gdrive/boot",
       });
 
       Application.initializer({
-        name: "googleDrive",
+        name: "googleDriveAuth",
         before: "store",
 
         initialize: function(container, application) {
@@ -326,7 +322,24 @@ define("ember-gdrive/boot",
           application.inject('controller', 'auth', 'auth:google');
           application.inject('route', 'auth', 'auth:google');
 
+
+          // open file if present
           var auth = container.lookup('auth:google');
+          var state = State.create();
+
+          if (state.get('isOpen')) {
+            application.open(state.get('fileID'));
+          }
+          else if (state.get('isCreate')) {
+            loader.load().then(function() {
+              return auth.checkStatus();
+            }).then(function(user) {
+              var fileOptions = application.create();
+              return GoogleDriveDocument.create(fileOptions);
+            }).then(function(doc) {
+              application.open(doc.get('id'))
+            });
+          }
         }
       });
 
@@ -432,9 +445,12 @@ define("ember-gdrive/document-source",
   ["exports"],
   function(__exports__) {
     "use strict";
-    __exports__["default"] = Ember.Object.extend({
+    var DocumentSource = Ember.Object.extend({
       id: null
     });
+
+
+    __exports__["default"] = DocumentSource;
   });
 define("ember-gdrive/document", 
   ["./reference","exports"],
@@ -492,6 +508,7 @@ define("ember-gdrive/document",
 
       ref: function() {
         return this.load().then(function(document) {
+          window.doc = document;
           return new Reference(
             document.get('model'),
             null,
@@ -636,35 +653,43 @@ define("ember-gdrive/loader",
     "use strict";
     var loader = {};
 
-    loader.load = function() {
-      var loaded = 0, libraryCount = 4;
+    loader.promise = null;
+    loader.loaded = 0;
+    loader.libraryCount = 4;
 
-      return new Ember.RSVP.Promise(function(resolve, reject) {
+    loader.load = function() {
+      if (loader.promise)
+        return loader.promise;
+
+      loader.promise = new Ember.RSVP.Promise(function(resolve, reject) {
         gapi.load('auth:client,drive-realtime,drive-share', function() {
 
           gapi.client.load('oauth2', 'v2', function() {
-            loaded++;
-            if (loaded >= libraryCount) resolve();
+            loader.loaded++;
+            if (loader.loaded >= loader.libraryCount) resolve();
           });
 
           gapi.client.load('drive', 'v2', function() {
-            loaded++;
-            if (loaded >= libraryCount) resolve();
+            loader.loaded++;
+            if (loader.loaded >= loader.libraryCount) resolve();
           });
 
           gapi.load('drive-share', function() {
-            loaded++;
-            if (loaded >= libraryCount) resolve();
+            loader.loaded++;
+            if (loader.loaded >= loader.libraryCount) resolve();
           });
 
           gapi.load('picker', function() {
-            loaded++;
-            if (loaded >= libraryCount) resolve();
+            loader.loaded++;
+            if (loader.loaded >= loader.libraryCount) resolve();
           });
 
         });
       });
+
+      return loader.promise;
     };
+
 
     __exports__["default"] = loader;
   });
@@ -927,11 +952,20 @@ define("ember-gdrive/router-auth",
     Ember.Route.reopen({
       requiresAuth: false,
       beforeModel: function() {
+        var route = this;
         if (this.get('requiresAuth')) {
-          var auth = this.get('auth');
-          return auth.checkStatus();
+          return this.get('auth').checkStatus().then(function(user) {
+            return user;
+          }, function(error) {
+            route.unauthenticated('unauthenticated');
+          });
         }
+      },
+
+      unauthenticated: function() {
+        Ember.assert('You must override unauthenticated for the routes where requiresAuth is set to true');
       }
+
     });
   });
 define("ember-gdrive/serializer", 
@@ -951,7 +985,7 @@ define("ember-gdrive/serializer",
       }
     };
 
-    __exports__["default"] = DS.JSONSerializer.extend({
+    var Serializer = DS.JSONSerializer.extend({
 
       serializeHasMany: function(record, json, relationship) {
         var key = relationship.key,
@@ -964,6 +998,8 @@ define("ember-gdrive/serializer",
       }
 
     });
+
+    __exports__["default"] = Serializer;
   });
 define("ember-gdrive/share-dialog", 
   ["exports"],
@@ -996,29 +1032,17 @@ define("ember-gdrive/state",
 
     __exports__["default"] = Ember.Object.extend({
 
-      application: Ember.required(),
-
-      redirectToFileIfProvided: function() {
-        if (this.fileProvided()) {
-          this.redirectToFile(this.get('fileID'));
-        }
-      },
-
-      redirectToFile: function(fileID) {
-        window.location = this.redirectToFilePath(fileID);
-      },
-
-      redirectToFilePath: function(fileID) {
-        return window.location.pathname + '#/project/' + fileID;
-      },
-
       fileID: function() {
         return this.get('fileIDs').objectAt(0);
       }.property('fileIDs'),
 
-      fileProvided: function() {
-        return this.get('action') == 'open' && this.get('fileIDs');
-      },
+      isOpen: function() {
+        return this.get('action') == 'open';
+      }.property('action'),
+
+      isCreate: function() {
+        return this.get('action') == 'create';
+      }.property('action'),
 
       queryParams: function() {
         return queryParams();
@@ -1080,5 +1104,13 @@ define("ember-gdrive",
   function(__dependency1__, __dependency2__) {
     "use strict";
 
+    Ember.Application.reopen({
+      create: function() {
+        Ember.assert('You must implement create() for Ember.Application');
+      },
+      open: function(id) {
+        Ember.assert('You must implement open(id) for Ember.Application');
+      }
+    });
   });
 }());

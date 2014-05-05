@@ -1,33 +1,41 @@
 var loader = {};
 
-loader.load = function() {
-  var loaded = 0, libraryCount = 4;
+loader.promise = null;
+loader.loaded = 0;
+loader.libraryCount = 4;
 
-  return new Ember.RSVP.Promise(function(resolve, reject) {
+loader.load = function() {
+  if (loader.promise)
+    return loader.promise;
+
+  loader.promise = new Ember.RSVP.Promise(function(resolve, reject) {
     gapi.load('auth:client,drive-realtime,drive-share', function() {
 
       gapi.client.load('oauth2', 'v2', function() {
-        loaded++;
-        if (loaded >= libraryCount) resolve();
+        loader.loaded++;
+        if (loader.loaded >= loader.libraryCount) resolve();
       });
 
       gapi.client.load('drive', 'v2', function() {
-        loaded++;
-        if (loaded >= libraryCount) resolve();
+        loader.loaded++;
+        if (loader.loaded >= loader.libraryCount) resolve();
       });
 
       gapi.load('drive-share', function() {
-        loaded++;
-        if (loaded >= libraryCount) resolve();
+        loader.loaded++;
+        if (loader.loaded >= loader.libraryCount) resolve();
       });
 
       gapi.load('picker', function() {
-        loaded++;
-        if (loaded >= libraryCount) resolve();
+        loader.loaded++;
+        if (loader.loaded >= loader.libraryCount) resolve();
       });
 
     });
   });
+
+  return loader.promise;
 };
+
 
 export default loader;

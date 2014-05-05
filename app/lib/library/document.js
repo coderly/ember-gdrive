@@ -50,6 +50,7 @@ var Document = Ember.Object.extend(Ember.Evented, {
 
   ref: function() {
     return this.load().then(function(document) {
+      window.doc = document;
       return new Reference(
         document.get('model'),
         null,
