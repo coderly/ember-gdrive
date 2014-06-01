@@ -59,14 +59,14 @@ exports["default"] = Ember.Object.extend(Ember.ActionHandler, {
       var observer = this;
       this.get('ref').then(function(ref) {
         var data = ref.get(typeKey, id).value();
-        observer.send('recordUpdatedLocally', store, typeKey, data);
+        observer.send('recordUpdatedLocally', store, typeKey, data, e);
       });
     }
     else {
       var observer = this;
       this.get('ref').then(function(ref) {
         var data = ref.get(typeKey, id).value();
-        observer.send('recordUpdatedRemotely', store, typeKey, data);
+        observer.send('recordUpdatedRemotely', store, typeKey, data, e);
       });
     }
   },

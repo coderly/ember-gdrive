@@ -1,4 +1,6 @@
 import 'ember-gdrive/router-auth';
+import 'ember-gdrive/store-extensions';
+
 import 'ember-gdrive/boot';
 
 Ember.Application.reopen({

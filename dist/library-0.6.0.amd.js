@@ -51,8 +51,10 @@ define("ember-gdrive/adapter",
             this.decrementProperty('unresolvedLocalChanges');
           }
         },
-        recordUpdatedLocally: function(store, typeKey, data) {
+        recordUpdatedLocally: function(store, typeKey, data, e) {
+          console.log('recordUpdatedLocally', typeKey, data);
           if (this.get('unresolvedLocalChanges') > 0) {
+            debugger;
             store.push(typeKey, data);
             this.decrementProperty('unresolvedLocalChanges');
           }
@@ -104,9 +106,9 @@ define("ember-gdrive/adapter",
           var serializedRecord = record.serialize({includeId: true}),
               id = record.get('id');
 
-          ref.begin();
+          adapter.beginSave();
           ref.get(type.typeKey, id).set(serializedRecord);
-          ref.end();
+          adapter.endSave();
 
           adapter.observeRecordData(store, type.typeKey, id);
 
@@ -120,9 +122,9 @@ define("ember-gdrive/adapter",
           var serializedRecord = record.serialize({includeId: true}),
               id = record.get('id');
 
-          ref.begin();
+          adapter.beginSave();
           ref.get(type.typeKey, id).set(serializedRecord);
-          ref.end();
+          adapter.endSave();
 
           adapter.observeRecordData(store, type.typeKey, id);
 
@@ -160,17 +162,22 @@ define("ember-gdrive/adapter",
       },
 
       undo: function() {
-        console.log('undo sonnownownfwonwefonwo yeah hoyoyoyoy o');
         this.incrementProperty('unresolvedLocalChanges');
         this.get('document').undo();
       },
 
       redo: function() {
-        console.log('redo sonsdfsdfdfnn');
         this.incrementProperty('unresolvedLocalChanges');
         this.get('document').redo();
-      }
+      },
 
+      beginSave: function(name) {
+        this.get('document').beginSave(name);
+      },
+
+      endSave: function() {
+        this.get('document').endSave();
+      }
     });
 
     __exports__["default"] = Adapter;
@@ -452,14 +459,14 @@ define("ember-gdrive/change-observer",
           var observer = this;
           this.get('ref').then(function(ref) {
             var data = ref.get(typeKey, id).value();
-            observer.send('recordUpdatedLocally', store, typeKey, data);
+            observer.send('recordUpdatedLocally', store, typeKey, data, e);
           });
         }
         else {
           var observer = this;
           this.get('ref').then(function(ref) {
             var data = ref.get(typeKey, id).value();
-            observer.send('recordUpdatedRemotely', store, typeKey, data);
+            observer.send('recordUpdatedRemotely', store, typeKey, data, e);
           });
         }
       },
@@ -565,11 +572,13 @@ define("ember-gdrive/document",
         });
       },
 
-      begin: function() {
-        this.get('model').beginCompoundOperation();
+      beginSave: function(name) {
+        console.log('beginSave', name);
+        this.get('model').beginCompoundOperation(name);
       },
 
-      end: function() {
+      endSave: function() {
+        console.log('endSave');
         this.get('model').endCompoundOperation();
       },
 
@@ -1110,6 +1119,28 @@ define("ember-gdrive/state",
       folderID: Ember.computed.alias('state.folderId')
     });
   });
+define("ember-gdrive/store-extensions", 
+  [],
+  function() {
+    "use strict";
+    DS.Store.reopen({
+      undo: function() {
+        this._defaultAdapter().undo();
+      },
+      redo: function() {
+        this._defaultAdapter().redo();
+      },
+      beginSave: function(name) {
+        this._defaultAdapter().beginSave(name);
+      },
+      endSave: function() {
+        this._defaultAdapter().endSave();
+      },
+      _defaultAdapter: function() {
+        return this.container.lookup('adapter:application');
+      }
+    });
+  });
 define("ember-gdrive/uuid", 
   ["exports"],
   function(__exports__) {
@@ -1148,9 +1179,10 @@ define("ember-gdrive/uuid",
     }
   });
 define("ember-gdrive", 
-  ["ember-gdrive/router-auth","ember-gdrive/boot"],
-  function(__dependency1__, __dependency2__) {
+  ["ember-gdrive/router-auth","ember-gdrive/store-extensions","ember-gdrive/boot"],
+  function(__dependency1__, __dependency2__, __dependency3__) {
     "use strict";
+
 
     Ember.Application.reopen({
       create: function() {

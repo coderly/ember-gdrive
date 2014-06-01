@@ -61,11 +61,13 @@ var Document = Ember.Object.extend(Ember.Evented, {
     });
   },
 
-  begin: function() {
-    this.get('model').beginCompoundOperation();
+  beginSave: function(name) {
+    console.log('beginSave', name);
+    this.get('model').beginCompoundOperation(name);
   },
 
-  end: function() {
+  endSave: function() {
+    console.log('endSave');
     this.get('model').endCompoundOperation();
   },
 

@@ -47,7 +47,8 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
         this.decrementProperty('unresolvedLocalChanges');
       }
     },
-    recordUpdatedLocally: function(store, typeKey, data) {
+    recordUpdatedLocally: function(store, typeKey, data, e) {
+      console.log('recordUpdatedLocally', typeKey, data);
       if (this.get('unresolvedLocalChanges') > 0) {
         store.push(typeKey, data);
         this.decrementProperty('unresolvedLocalChanges');
@@ -100,9 +101,9 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
       var serializedRecord = record.serialize({includeId: true}),
           id = record.get('id');
 
-      ref.begin();
+      adapter.beginSave();
       ref.get(type.typeKey, id).set(serializedRecord);
-      ref.end();
+      adapter.endSave();
 
       adapter.observeRecordData(store, type.typeKey, id);
 
@@ -116,9 +117,9 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
       var serializedRecord = record.serialize({includeId: true}),
           id = record.get('id');
 
-      ref.begin();
+      adapter.beginSave();
       ref.get(type.typeKey, id).set(serializedRecord);
-      ref.end();
+      adapter.endSave();
 
       adapter.observeRecordData(store, type.typeKey, id);
 
@@ -163,8 +164,15 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
   redo: function() {
     this.incrementProperty('unresolvedLocalChanges');
     this.get('document').redo();
-  }
+  },
 
+  beginSave: function(name) {
+    this.get('document').beginSave(name);
+  },
+
+  endSave: function() {
+    this.get('document').endSave();
+  }
 });
 
 export default Adapter;
