@@ -55,7 +55,11 @@ export default Ember.Object.extend(Ember.ActionHandler, {
 
   recordDataChanged: function(store, typeKey, id, e) {
     if (e.isLocal) {
-      this.send('recordUpdatedLocally', store, typeKey, id);
+      var observer = this;
+      this.get('ref').then(function(ref) {
+        var data = ref.get(typeKey, id).value();
+        observer.send('recordUpdatedLocally', store, typeKey, data);
+      });
     }
     else {
       var observer = this;

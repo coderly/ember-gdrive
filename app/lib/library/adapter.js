@@ -4,18 +4,30 @@ import ChangeObserver from './change-observer';
 
 var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
 
+  init: function() {
+    this._super();
+  },
+
   documentSource: null,
   documentId: Ember.computed.alias('documentSource.id'),
 
   defaultSerializer: '-google-drive',
 
-  document: function() {
+  documentPromise: function() {
+    var adapter = this;
     Ember.assert('A document id was not assigned. Make sure you set a document ' +
                  'id in a route before the store is accessed', this.get('documentId'));
 
-    return Document.find( this.get('documentId') );
+    return Document.find( this.get('documentId') ).then(function(doc) {
+      adapter.set('document', doc);
+      return doc;
+    });
 
   }.property('documentId'),
+
+  document: null,
+
+  unresolvedLocalChanges: 0,
 
   _actions: {
     recordCreatedRemotely: function(store, typeKey, data) {
@@ -27,11 +39,31 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
     recordDeletedRemotely: function(store, typeKey, id) {
       var deletedRecord = store.getById(typeKey, id);
       store.unloadRecord(deletedRecord);
+    },
+
+    recordCreatedLocally: function(store, typeKey, data) {
+      if (this.get('unresolvedLocalChanges') > 0) {
+        store.push(typeKey, data);
+        this.decrementProperty('unresolvedLocalChanges');
+      }
+    },
+    recordUpdatedLocally: function(store, typeKey, data) {
+      if (this.get('unresolvedLocalChanges') > 0) {
+        store.push(typeKey, data);
+        this.decrementProperty('unresolvedLocalChanges');
+      }
+    },
+    recordDeletedLocally: function(store, typeKey, id) {
+      if (this.get('unresolvedLocalChanges') > 0) {
+        var deletedRecord = store.getById(typeKey, id);
+        store.unloadRecord(deletedRecord);
+        this.decrementProperty('unresolvedLocalChanges');
+      }
     }
   },
 
   ref: function() {
-    return this.get('document').then(function(document) {
+    return this.get('documentPromise').then(function(document) {
       document.ref().then(function(r) { window.ref = r; });
       return document.ref();
     });
@@ -121,6 +153,16 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
       var id = record.get('id');
       ref.get(type.typeKey).delete(id);
     });
+  },
+
+  undo: function() {
+    this.incrementProperty('unresolvedLocalChanges');
+    this.get('document').undo();
+  },
+
+  redo: function() {
+    this.incrementProperty('unresolvedLocalChanges');
+    this.get('document').redo();
   }
 
 });

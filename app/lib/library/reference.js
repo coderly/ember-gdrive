@@ -99,6 +99,11 @@ MapReference.prototype.delete = function(key) {
   return this;
 };
 
+MapReference.prototype.clear = function() {
+  this.data.clear();
+  return this;
+};
+
 MapReference.prototype.materialize = function() {
   return this;
 };

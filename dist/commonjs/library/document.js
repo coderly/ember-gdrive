@@ -97,18 +97,14 @@ var Document = Ember.Object.extend(Ember.Evented, {
 
   /* undo/redo */
 
-  unresolvedLocalChanges: 0,
-
   undo: function() {
     if (this.canUndo()) {
-      this.incrementProperty('unresolvedLocalChanges');
       this.get('model').undo();
     }
   },
 
   redo: function() {
     if (this.canRedo()) {
-      this.incrementProperty('unresolvedLocalChanges');
       this.get('model').redo();
     }
   },
