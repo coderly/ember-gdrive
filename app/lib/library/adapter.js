@@ -48,7 +48,6 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
       }
     },
     recordUpdatedLocally: function(store, typeKey, data, e) {
-      console.log('recordUpdatedLocally', typeKey, data);
       if (this.get('unresolvedLocalChanges') > 0) {
         store.push(typeKey, data);
         this.decrementProperty('unresolvedLocalChanges');
@@ -68,10 +67,10 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
       document.ref().then(function(r) { window.ref = r; });
       return document.ref();
     });
-  },
+  }.property().readOnly(),
 
   changeObserver: function() {
-    return ChangeObserver.create({ ref: this.ref(), target: this });
+    return ChangeObserver.create({ ref: this.get('ref'), target: this });
   }.property(),
 
   observeRecordData: function(store, typeKey, id) {
@@ -88,7 +87,7 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
 
   find: function(store, type, id) {
     var adapter = this;
-    return this.ref().then(function(ref) {
+    return this.get('ref').then(function(ref) {
       adapter.observeRecordData(store, type.typeKey, id);
       return ref.get(type.typeKey, id).value();
     });
@@ -97,7 +96,7 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
   createRecord: function(store, type, record) {
     var adapter = this;
 
-    return this.ref().then(function(ref) {
+    return this.get('ref').then(function(ref) {
       var serializedRecord = record.serialize({includeId: true}),
           id = record.get('id');
 
@@ -113,7 +112,7 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
 
   updateRecord: function(store, type, record) {
     var adapter = this;
-    return this.ref().then(function(ref) {
+    return this.get('ref').then(function(ref) {
       var serializedRecord = record.serialize({includeId: true}),
           id = record.get('id');
 
@@ -130,7 +129,7 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
   findAll: function(store, type) {
     var adapter = this;
 
-    return this.ref().then(function(ref) {
+    return this.get('ref').then(function(ref) {
       var identityMap = ref.get(type.typeKey).value() || {};
       var keys = ref.get(type.typeKey).keys();
       var serializedRecords = [];
@@ -150,7 +149,7 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
   },
 
   deleteRecord: function(store, type, record) {
-    return this.ref().then(function(ref) {
+    return this.get('ref').then(function(ref) {
       var id = record.get('id');
       ref.get(type.typeKey).delete(id);
     });

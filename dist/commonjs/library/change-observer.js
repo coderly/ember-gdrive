@@ -13,13 +13,16 @@ exports["default"] = Ember.Object.extend(Ember.ActionHandler, {
       return Ember.RSVP.Promise.resolve();
     }
     else {
-      observedMap[key] = true;
+      observedMap[key] = true; // can set this to the promise and return that every time
     }
 
     return this.get('ref').then(function(ref) {
       ref.get(typeKey, id).changed(function(e) {
+
         if (e.type == 'object_changed')
-          Ember.run.once(observer, 'recordDataChanged', store, typeKey, id, e);
+          Ember.run(function(){
+            observer.recordDataChanged(store, typeKey, id, e);
+          });
       });
     });
   },
@@ -59,14 +62,14 @@ exports["default"] = Ember.Object.extend(Ember.ActionHandler, {
       var observer = this;
       this.get('ref').then(function(ref) {
         var data = ref.get(typeKey, id).value();
-        observer.send('recordUpdatedLocally', store, typeKey, data, e);
+        observer.send('recordUpdatedLocally', store, typeKey, data);
       });
     }
     else {
       var observer = this;
       this.get('ref').then(function(ref) {
         var data = ref.get(typeKey, id).value();
-        observer.send('recordUpdatedRemotely', store, typeKey, data, e);
+        observer.send('recordUpdatedRemotely', store, typeKey, data);
       });
     }
   },

@@ -1,12 +1,9 @@
 export default Ember.Object.extend({
-  appID: ENV.GOOGLE_DRIVE_SDK_APP_ID,
-  fileID: Ember.required(),
+  documentId: Ember.required(),
   show: function() {
-    var appID = this.get('appID'),
-        fileID = this.get('fileID'),
-        shareClient = new gapi.drive.share.ShareClient(appID);
+    var shareClient = new gapi.drive.share.ShareClient(ENV.GOOGLE_DRIVE_SDK_APP_ID);
 
-    shareClient.setItemIds([fileID]);
+    shareClient.setItemIds([ this.get('documentId') ]);
     shareClient.showSettingsDialog();
   }
 });

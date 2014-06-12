@@ -60,13 +60,11 @@ var Document = Ember.Object.extend(Ember.Evented, {
     });
   },
 
-  beginSave: function(name) {
-    console.log('beginSave', name);
-    this.get('model').beginCompoundOperation(name);
+  beginSave: function() {
+    this.get('model').beginCompoundOperation();
   },
 
   endSave: function() {
-    console.log('endSave');
     this.get('model').endCompoundOperation();
   },
 
@@ -144,8 +142,6 @@ var Document = Ember.Object.extend(Ember.Evented, {
 
 Document.reopenClass({
   find: function(fileID) {
-    var _this = this;
-
     if (filePromises[fileID])
       return filePromises[fileID];
 

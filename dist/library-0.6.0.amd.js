@@ -52,9 +52,7 @@ define("ember-gdrive/adapter",
           }
         },
         recordUpdatedLocally: function(store, typeKey, data, e) {
-          console.log('recordUpdatedLocally', typeKey, data);
           if (this.get('unresolvedLocalChanges') > 0) {
-            debugger;
             store.push(typeKey, data);
             this.decrementProperty('unresolvedLocalChanges');
           }
@@ -73,10 +71,10 @@ define("ember-gdrive/adapter",
           document.ref().then(function(r) { window.ref = r; });
           return document.ref();
         });
-      },
+      }.property().readOnly(),
 
       changeObserver: function() {
-        return ChangeObserver.create({ ref: this.ref(), target: this });
+        return ChangeObserver.create({ ref: this.get('ref'), target: this });
       }.property(),
 
       observeRecordData: function(store, typeKey, id) {
@@ -93,7 +91,7 @@ define("ember-gdrive/adapter",
 
       find: function(store, type, id) {
         var adapter = this;
-        return this.ref().then(function(ref) {
+        return this.get('ref').then(function(ref) {
           adapter.observeRecordData(store, type.typeKey, id);
           return ref.get(type.typeKey, id).value();
         });
@@ -102,7 +100,7 @@ define("ember-gdrive/adapter",
       createRecord: function(store, type, record) {
         var adapter = this;
 
-        return this.ref().then(function(ref) {
+        return this.get('ref').then(function(ref) {
           var serializedRecord = record.serialize({includeId: true}),
               id = record.get('id');
 
@@ -118,7 +116,7 @@ define("ember-gdrive/adapter",
 
       updateRecord: function(store, type, record) {
         var adapter = this;
-        return this.ref().then(function(ref) {
+        return this.get('ref').then(function(ref) {
           var serializedRecord = record.serialize({includeId: true}),
               id = record.get('id');
 
@@ -135,7 +133,7 @@ define("ember-gdrive/adapter",
       findAll: function(store, type) {
         var adapter = this;
 
-        return this.ref().then(function(ref) {
+        return this.get('ref').then(function(ref) {
           var identityMap = ref.get(type.typeKey).value() || {};
           var keys = ref.get(type.typeKey).keys();
           var serializedRecords = [];
@@ -155,7 +153,7 @@ define("ember-gdrive/adapter",
       },
 
       deleteRecord: function(store, type, record) {
-        return this.ref().then(function(ref) {
+        return this.get('ref').then(function(ref) {
           var id = record.get('id');
           ref.get(type.typeKey).delete(id);
         });
@@ -346,7 +344,9 @@ define("ember-gdrive/boot",
           application.register('serializer:-google-drive', GoogleDriveSerializer);
 
           application.register('document-source:main', DocumentSource);
+
           application.inject('route', 'documentSource', 'document-source:main');
+          application.inject('controller', 'documentSource', 'document-source:main');
           application.inject('adapter:application', 'documentSource', 'document-source:main');
         }
       });
@@ -413,13 +413,16 @@ define("ember-gdrive/change-observer",
           return Ember.RSVP.Promise.resolve();
         }
         else {
-          observedMap[key] = true;
+          observedMap[key] = true; // can set this to the promise and return that every time
         }
 
         return this.get('ref').then(function(ref) {
           ref.get(typeKey, id).changed(function(e) {
+
             if (e.type == 'object_changed')
-              Ember.run.once(observer, 'recordDataChanged', store, typeKey, id, e);
+              Ember.run(function(){
+                observer.recordDataChanged(store, typeKey, id, e);
+              });
           });
         });
       },
@@ -459,14 +462,14 @@ define("ember-gdrive/change-observer",
           var observer = this;
           this.get('ref').then(function(ref) {
             var data = ref.get(typeKey, id).value();
-            observer.send('recordUpdatedLocally', store, typeKey, data, e);
+            observer.send('recordUpdatedLocally', store, typeKey, data);
           });
         }
         else {
           var observer = this;
           this.get('ref').then(function(ref) {
             var data = ref.get(typeKey, id).value();
-            observer.send('recordUpdatedRemotely', store, typeKey, data, e);
+            observer.send('recordUpdatedRemotely', store, typeKey, data);
           });
         }
       },
@@ -572,13 +575,11 @@ define("ember-gdrive/document",
         });
       },
 
-      beginSave: function(name) {
-        console.log('beginSave', name);
-        this.get('model').beginCompoundOperation(name);
+      beginSave: function() {
+        this.get('model').beginCompoundOperation();
       },
 
       endSave: function() {
-        console.log('endSave');
         this.get('model').endCompoundOperation();
       },
 
@@ -656,8 +657,6 @@ define("ember-gdrive/document",
 
     Document.reopenClass({
       find: function(fileID) {
-        var _this = this;
-
         if (filePromises[fileID])
           return filePromises[fileID];
 
@@ -1063,14 +1062,11 @@ define("ember-gdrive/share-dialog",
   function(__exports__) {
     "use strict";
     __exports__["default"] = Ember.Object.extend({
-      appID: ENV.GOOGLE_DRIVE_SDK_APP_ID,
-      fileID: Ember.required(),
+      documentId: Ember.required(),
       show: function() {
-        var appID = this.get('appID'),
-            fileID = this.get('fileID'),
-            shareClient = new gapi.drive.share.ShareClient(appID);
+        var shareClient = new gapi.drive.share.ShareClient(ENV.GOOGLE_DRIVE_SDK_APP_ID);
 
-        shareClient.setItemIds([fileID]);
+        shareClient.setItemIds([ this.get('documentId') ]);
         shareClient.showSettingsDialog();
       }
     });

@@ -22,7 +22,9 @@ Ember.onLoad('Ember.Application', function(Application) {
       application.register('serializer:-google-drive', GoogleDriveSerializer);
 
       application.register('document-source:main', DocumentSource);
+
       application.inject('route', 'documentSource', 'document-source:main');
+      application.inject('controller', 'documentSource', 'document-source:main');
       application.inject('adapter:application', 'documentSource', 'document-source:main');
     }
   });

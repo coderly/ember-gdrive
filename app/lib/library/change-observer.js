@@ -12,13 +12,16 @@ export default Ember.Object.extend(Ember.ActionHandler, {
       return Ember.RSVP.Promise.resolve();
     }
     else {
-      observedMap[key] = true;
+      observedMap[key] = true; // can set this to the promise and return that every time
     }
 
     return this.get('ref').then(function(ref) {
       ref.get(typeKey, id).changed(function(e) {
+
         if (e.type == 'object_changed')
-          Ember.run.once(observer, 'recordDataChanged', store, typeKey, id, e);
+          Ember.run(function(){
+            observer.recordDataChanged(store, typeKey, id, e);
+          });
       });
     });
   },
