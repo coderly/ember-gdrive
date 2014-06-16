@@ -1,3 +1,5 @@
+import { normalizeTypeKey } from './util';
+
 export default Ember.Object.extend(Ember.ActionHandler, {
   ref: null,
   target: null,
@@ -6,7 +8,7 @@ export default Ember.Object.extend(Ember.ActionHandler, {
   observeRecordData: function(store, typeKey, id) {
     var observer = this,
         observedMap = this.get('observedMap'),
-        key = [typeKey, id].join('/');
+        key = [normalizeTypeKey(typeKey), id].join('/');
 
     if (this.contains(key)) {
       return Ember.RSVP.Promise.resolve();
@@ -16,7 +18,7 @@ export default Ember.Object.extend(Ember.ActionHandler, {
     }
 
     return this.get('ref').then(function(ref) {
-      ref.get(typeKey, id).changed(function(e) {
+      ref.get(normalizeTypeKey(typeKey), id).changed(function(e) {
 
         if (e.type == 'object_changed')
           Ember.run(function(){
@@ -28,8 +30,8 @@ export default Ember.Object.extend(Ember.ActionHandler, {
 
   observeIdentityMap: function(store, typeKey) {
     var observer = this,
-      observedMap = this.get('observedMap'),
-      key = [typeKey].join('/');
+        observedMap = this.get('observedMap'),
+        key = [normalizeTypeKey(typeKey)].join('/');
 
     if (this.contains(key)) {
       return Ember.RSVP.Promise.resolve();
@@ -39,7 +41,7 @@ export default Ember.Object.extend(Ember.ActionHandler, {
     }
 
     return this.get('ref').then(function(ref) {
-      ref.get(typeKey).materialize().changed(function(e) {
+      ref.get(normalizeTypeKey(typeKey)).materialize().changed(function(e) {
         if (!e.isLocal) {
           window.vals.push(e);
         }
@@ -60,14 +62,14 @@ export default Ember.Object.extend(Ember.ActionHandler, {
     if (e.isLocal) {
       var observer = this;
       this.get('ref').then(function(ref) {
-        var data = ref.get(typeKey, id).value();
+        var data = ref.get(normalizeTypeKey(typeKey), id).value();
         observer.send('recordUpdatedLocally', store, typeKey, data);
       });
     }
     else {
       var observer = this;
       this.get('ref').then(function(ref) {
-        var data = ref.get(typeKey, id).value();
+        var data = ref.get(normalizeTypeKey(typeKey), id).value();
         observer.send('recordUpdatedRemotely', store, typeKey, data);
       });
     }
@@ -77,7 +79,7 @@ export default Ember.Object.extend(Ember.ActionHandler, {
     var observer = this;
 
     if (e.isLocal && e.oldValue == null && e.newValue) {
-      this.send('recordCreatedLocally', store ,typeKey, e.newValue.get('id'));
+      this.send('recordCreatedLocally', store, typeKey, e.newValue.get('id'));
     }
     else if (e.isLocal && e.oldValue && e.newValue == null) {
       this.send('recordDeletedLocally', store, typeKey, e.oldValue.get('id'));
@@ -85,7 +87,7 @@ export default Ember.Object.extend(Ember.ActionHandler, {
     else if (!e.isLocal && e.oldValue == null && e.newValue) {
       var newRecordId = e.newValue.get('id');
       this.get('ref').then(function(ref) {
-        var data = ref.get(typeKey, newRecordId).value();
+        var data = ref.get(normalizeTypeKey(typeKey), newRecordId).value();
         observer.send('recordCreatedRemotely', store, typeKey, data);
       });
     }

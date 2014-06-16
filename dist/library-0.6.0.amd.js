@@ -1,10 +1,12 @@
 define("ember-gdrive/adapter", 
-  ["./uuid","./document","./change-observer","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
+  ["./uuid","./document","./change-observer","./util","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
     var uuid = __dependency1__["default"];
     var Document = __dependency2__["default"];
     var ChangeObserver = __dependency3__["default"];
+
+    var modelKey = __dependency4__.modelKey;
 
     var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
 
@@ -93,7 +95,7 @@ define("ember-gdrive/adapter",
         var adapter = this;
         return this.get('ref').then(function(ref) {
           adapter.observeRecordData(store, type.typeKey, id);
-          return ref.get(type.typeKey, id).value();
+          return ref.get(modelKey(type), id).value();
         });
       },
 
@@ -105,12 +107,12 @@ define("ember-gdrive/adapter",
               id = record.get('id');
 
           adapter.beginSave();
-          ref.get(type.typeKey, id).set(serializedRecord);
+          ref.get(modelKey(type), id).set(serializedRecord);
           adapter.endSave();
 
           adapter.observeRecordData(store, type.typeKey, id);
 
-          return ref.get(type.typeKey, id).value();
+          return ref.get(modelKey(type), id).value();
         });
       },
 
@@ -121,12 +123,12 @@ define("ember-gdrive/adapter",
               id = record.get('id');
 
           adapter.beginSave();
-          ref.get(type.typeKey, id).set(serializedRecord);
+          ref.get(modelKey(type), id).set(serializedRecord);
           adapter.endSave();
 
           adapter.observeRecordData(store, type.typeKey, id);
 
-          return ref.get(type.typeKey, id).value();
+          return ref.get(modelKey(type), id).value();
         });
       },
 
@@ -134,8 +136,8 @@ define("ember-gdrive/adapter",
         var adapter = this;
 
         return this.get('ref').then(function(ref) {
-          var identityMap = ref.get(type.typeKey).value() || {};
-          var keys = ref.get(type.typeKey).keys();
+          var identityMap = ref.get(modelKey(type)).value() || {};
+          var keys = ref.get(modelKey(type)).keys();
           var serializedRecords = [];
 
           for (var i = 0; i < keys.length; i++) {
@@ -155,7 +157,7 @@ define("ember-gdrive/adapter",
       deleteRecord: function(store, type, record) {
         return this.get('ref').then(function(ref) {
           var id = record.get('id');
-          ref.get(type.typeKey).delete(id);
+          ref.get(modelKey(type)).delete(id);
         });
       },
 
@@ -396,9 +398,11 @@ define("ember-gdrive/boot",
     });
   });
 define("ember-gdrive/change-observer", 
-  ["exports"],
-  function(__exports__) {
+  ["./util","exports"],
+  function(__dependency1__, __exports__) {
     "use strict";
+    var normalizeTypeKey = __dependency1__.normalizeTypeKey;
+
     __exports__["default"] = Ember.Object.extend(Ember.ActionHandler, {
       ref: null,
       target: null,
@@ -407,7 +411,7 @@ define("ember-gdrive/change-observer",
       observeRecordData: function(store, typeKey, id) {
         var observer = this,
             observedMap = this.get('observedMap'),
-            key = [typeKey, id].join('/');
+            key = [normalizeTypeKey(typeKey), id].join('/');
 
         if (this.contains(key)) {
           return Ember.RSVP.Promise.resolve();
@@ -417,7 +421,7 @@ define("ember-gdrive/change-observer",
         }
 
         return this.get('ref').then(function(ref) {
-          ref.get(typeKey, id).changed(function(e) {
+          ref.get(normalizeTypeKey(typeKey), id).changed(function(e) {
 
             if (e.type == 'object_changed')
               Ember.run(function(){
@@ -429,8 +433,8 @@ define("ember-gdrive/change-observer",
 
       observeIdentityMap: function(store, typeKey) {
         var observer = this,
-          observedMap = this.get('observedMap'),
-          key = [typeKey].join('/');
+            observedMap = this.get('observedMap'),
+            key = [normalizeTypeKey(typeKey)].join('/');
 
         if (this.contains(key)) {
           return Ember.RSVP.Promise.resolve();
@@ -440,7 +444,7 @@ define("ember-gdrive/change-observer",
         }
 
         return this.get('ref').then(function(ref) {
-          ref.get(typeKey).materialize().changed(function(e) {
+          ref.get(normalizeTypeKey(typeKey)).materialize().changed(function(e) {
             if (!e.isLocal) {
               window.vals.push(e);
             }
@@ -461,14 +465,14 @@ define("ember-gdrive/change-observer",
         if (e.isLocal) {
           var observer = this;
           this.get('ref').then(function(ref) {
-            var data = ref.get(typeKey, id).value();
+            var data = ref.get(normalizeTypeKey(typeKey), id).value();
             observer.send('recordUpdatedLocally', store, typeKey, data);
           });
         }
         else {
           var observer = this;
           this.get('ref').then(function(ref) {
-            var data = ref.get(typeKey, id).value();
+            var data = ref.get(normalizeTypeKey(typeKey), id).value();
             observer.send('recordUpdatedRemotely', store, typeKey, data);
           });
         }
@@ -478,7 +482,7 @@ define("ember-gdrive/change-observer",
         var observer = this;
 
         if (e.isLocal && e.oldValue == null && e.newValue) {
-          this.send('recordCreatedLocally', store ,typeKey, e.newValue.get('id'));
+          this.send('recordCreatedLocally', store, typeKey, e.newValue.get('id'));
         }
         else if (e.isLocal && e.oldValue && e.newValue == null) {
           this.send('recordDeletedLocally', store, typeKey, e.oldValue.get('id'));
@@ -486,7 +490,7 @@ define("ember-gdrive/change-observer",
         else if (!e.isLocal && e.oldValue == null && e.newValue) {
           var newRecordId = e.newValue.get('id');
           this.get('ref').then(function(ref) {
-            var data = ref.get(typeKey, newRecordId).value();
+            var data = ref.get(normalizeTypeKey(typeKey), newRecordId).value();
             observer.send('recordCreatedRemotely', store, typeKey, data);
           });
         }
@@ -1025,10 +1029,10 @@ define("ember-gdrive/router-auth",
     });
   });
 define("ember-gdrive/serializer", 
-  ["exports"],
-  function(__exports__) {
+  ["./util","exports"],
+  function(__dependency1__, __exports__) {
     "use strict";
-    var get = Ember.get;
+    var recordKey = __dependency1__.recordKey;
 
     var serializeRecordId = function(record) {
       return record.get('id');
@@ -1037,7 +1041,7 @@ define("ember-gdrive/serializer",
     var serializeRecordPolymorphicId = function(record) {
       return {
         id: record.get('id'),
-        type: record.constructor.typeKey
+        type: recordKey(record)
       }
     };
 
@@ -1049,7 +1053,7 @@ define("ember-gdrive/serializer",
 
         if (relationshipType === 'manyToNone' || relationshipType === 'manyToMany') {
           var serializeId = relationship.options.polymorphic ? serializeRecordPolymorphicId : serializeRecordId;
-          json[key] = get(record, key).map(serializeId);
+          json[key] = Ember.get(record, key).map(serializeId);
         }
       }
 
@@ -1136,6 +1140,26 @@ define("ember-gdrive/store-extensions",
         return this.container.lookup('adapter:application');
       }
     });
+  });
+define("ember-gdrive/util", 
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+    var normalizeTypeKey = function(typeKey) {
+      return Ember.String.dasherize(typeKey);
+    };
+
+    var modelKey = function(model) {
+      return normalizeTypeKey(model.typeKey);
+    };
+
+    var recordKey = function(record) {
+      return modelKey(record.constructor);
+    };
+
+    __exports__.normalizeTypeKey = normalizeTypeKey;
+    __exports__.modelKey = modelKey;
+    __exports__.recordKey = recordKey;
   });
 define("ember-gdrive/uuid", 
   ["exports"],

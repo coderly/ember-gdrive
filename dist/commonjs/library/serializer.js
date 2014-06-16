@@ -1,5 +1,5 @@
 "use strict";
-var get = Ember.get;
+var recordKey = require("./util").recordKey;
 
 var serializeRecordId = function(record) {
   return record.get('id');
@@ -8,7 +8,7 @@ var serializeRecordId = function(record) {
 var serializeRecordPolymorphicId = function(record) {
   return {
     id: record.get('id'),
-    type: record.constructor.typeKey
+    type: recordKey(record)
   }
 };
 
@@ -20,7 +20,7 @@ var Serializer = DS.JSONSerializer.extend({
 
     if (relationshipType === 'manyToNone' || relationshipType === 'manyToMany') {
       var serializeId = relationship.options.polymorphic ? serializeRecordPolymorphicId : serializeRecordId;
-      json[key] = get(record, key).map(serializeId);
+      json[key] = Ember.get(record, key).map(serializeId);
     }
   }
 

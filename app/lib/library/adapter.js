@@ -2,6 +2,8 @@ import uuid from './uuid';
 import Document from './document';
 import ChangeObserver from './change-observer';
 
+import { modelKey } from './util';
+
 var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
 
   init: function() {
@@ -89,7 +91,7 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
     var adapter = this;
     return this.get('ref').then(function(ref) {
       adapter.observeRecordData(store, type.typeKey, id);
-      return ref.get(type.typeKey, id).value();
+      return ref.get(modelKey(type), id).value();
     });
   },
 
@@ -101,12 +103,12 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
           id = record.get('id');
 
       adapter.beginSave();
-      ref.get(type.typeKey, id).set(serializedRecord);
+      ref.get(modelKey(type), id).set(serializedRecord);
       adapter.endSave();
 
       adapter.observeRecordData(store, type.typeKey, id);
 
-      return ref.get(type.typeKey, id).value();
+      return ref.get(modelKey(type), id).value();
     });
   },
 
@@ -117,12 +119,12 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
           id = record.get('id');
 
       adapter.beginSave();
-      ref.get(type.typeKey, id).set(serializedRecord);
+      ref.get(modelKey(type), id).set(serializedRecord);
       adapter.endSave();
 
       adapter.observeRecordData(store, type.typeKey, id);
 
-      return ref.get(type.typeKey, id).value();
+      return ref.get(modelKey(type), id).value();
     });
   },
 
@@ -130,8 +132,8 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
     var adapter = this;
 
     return this.get('ref').then(function(ref) {
-      var identityMap = ref.get(type.typeKey).value() || {};
-      var keys = ref.get(type.typeKey).keys();
+      var identityMap = ref.get(modelKey(type)).value() || {};
+      var keys = ref.get(modelKey(type)).keys();
       var serializedRecords = [];
 
       for (var i = 0; i < keys.length; i++) {
@@ -151,7 +153,7 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
   deleteRecord: function(store, type, record) {
     return this.get('ref').then(function(ref) {
       var id = record.get('id');
-      ref.get(type.typeKey).delete(id);
+      ref.get(modelKey(type)).delete(id);
     });
   },
 
