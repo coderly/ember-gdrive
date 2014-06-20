@@ -445,10 +445,6 @@ define("ember-gdrive/change-observer",
 
         return this.get('ref').then(function(ref) {
           ref.get(normalizeTypeKey(typeKey)).materialize().changed(function(e) {
-            if (!e.isLocal) {
-              window.vals.push(e);
-            }
-
             if (e.type == 'value_changed')
               Ember.run.once(observer, 'identityMapChanged', store, typeKey, e);
           });
@@ -667,7 +663,7 @@ define("ember-gdrive/document",
         filePromises[fileID] = new Ember.RSVP.Promise(function(resolve, reject) {
           gapi.client.drive.files.get({fileId: fileID}).execute(function(googleFile) {
             if (googleFile.error) {
-              reject(googleFile);
+              reject(new Error(googleFile.error.message));
             }
             else {
               resolve( new Document(googleFile) );
@@ -681,7 +677,7 @@ define("ember-gdrive/document",
         var _this = this;
         return _this._sendCreateRequest(params).then(function(googleFile) {
           if (googleFile.error) {
-            return Ember.RSVP.reject(googleFile);
+            return Ember.RSVP.reject(new Error(googleFile.error.message));
           }
           else {
             return new Document(googleFile);

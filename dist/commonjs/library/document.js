@@ -149,7 +149,7 @@ Document.reopenClass({
     filePromises[fileID] = new Ember.RSVP.Promise(function(resolve, reject) {
       gapi.client.drive.files.get({fileId: fileID}).execute(function(googleFile) {
         if (googleFile.error) {
-          reject(googleFile);
+          reject(new Error(googleFile.error.message));
         }
         else {
           resolve( new Document(googleFile) );
@@ -163,7 +163,7 @@ Document.reopenClass({
     var _this = this;
     return _this._sendCreateRequest(params).then(function(googleFile) {
       if (googleFile.error) {
-        return Ember.RSVP.reject(googleFile);
+        return Ember.RSVP.reject(new Error(googleFile.error.message));
       }
       else {
         return new Document(googleFile);

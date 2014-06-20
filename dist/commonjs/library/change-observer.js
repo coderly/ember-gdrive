@@ -43,10 +43,6 @@ exports["default"] = Ember.Object.extend(Ember.ActionHandler, {
 
     return this.get('ref').then(function(ref) {
       ref.get(normalizeTypeKey(typeKey)).materialize().changed(function(e) {
-        if (!e.isLocal) {
-          window.vals.push(e);
-        }
-
         if (e.type == 'value_changed')
           Ember.run.once(observer, 'identityMapChanged', store, typeKey, e);
       });
