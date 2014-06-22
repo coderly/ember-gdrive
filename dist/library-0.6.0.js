@@ -156,19 +156,19 @@ define("ember-gdrive/auth",
         FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file',
         OPENID_SCOPE = 'openid';
 
-    var Auth = Ember.StateManager.extend({
-      enableLogging: false,
-      initialState: 'loggedOut',
+    var Auth = Ember.Object.extend({
+      isAuthenticated: false,
+      isUnauthenticated: Ember.computed.not('isAuthenticated'),
 
       user: null,
+      userID: Ember.computed.alias('user.id'),
 
       clientID: ENV.GOOGLE_CLIENT_ID,
-      userID: Ember.computed.alias('user.id'),
       permissions: [INSTALL_SCOPE, FILE_SCOPE, OPENID_SCOPE],
 
       token: function() {
         return gapi.auth.getToken().access_token;
-      }.property('currentState'),
+      }.property().volatile(),
 
       checkStatus: function() {
         if (this.get('isAuthenticated')) {
@@ -176,44 +176,49 @@ define("ember-gdrive/auth",
         }
 
         var auth = this;
-        auth.transitionTo('checking');
-        return auth._fetchLoginState().then(function() {
-          auth.transitionTo('loggingIn.fetchingUser');
-          return auth._fetchUserObject();
-        }, function(error){
-          auth.transitionTo('loggedOut.known');
-          return Ember.RSVP.reject(error);
-        }, "checkStatus _fetchLoginState handler").then(function(user) {
-          auth.transitionTo('loggedIn');
+        return this.authorizeWithGoogle({immediate: true}).then(function() {
+          auth.set('isAuthenticated', true);
+
+          return auth.fetchGoogleUserObject();
+        }).then(function(user) {
           auth.set('user', user);
           return user;
-        }, null, "checkState _fetchUserObject handler");
+        });
       },
 
-      login: function() {
-        this.transitionTo('loggingIn.showingPrompt');
-      },
-
-      _fetchLoginState: function() {
+      login: function(options) {
         var auth = this;
+        return this.authorizeWithGoogle(options).then(function(result) {
+          auth.set('isAuthenticated', true);
+
+          return auth.fetchGoogleUserObject();
+        }).then(function(user) {
+          auth.set('user', user);
+
+          debugger;
+          return user;
+        });
+      },
+
+      authorizeWithGoogle: function(options) {
+        var finalOptions = Ember.merge(options, {
+          client_id: this.get('clientID'),
+          scope: this.get('permissions')
+        });
 
         return new Ember.RSVP.Promise(function(resolve, reject) {
-          gapi.auth.authorize({
-            client_id: auth.get('clientID'),
-            user_id: auth.get('userID'),
-            scope: auth.get('permissions'),
-            immediate: true
-          }, function(result){
+          console.log('authorize', finalOptions);
+          gapi.auth.authorize(finalOptions, function(result) {
             if (result && !result.error) {
-              Ember.run(null, resolve);
+              Ember.run(null, resolve, result);
             } else {
               Ember.run(null, reject, result && result.error ? result.error : 'unauthenticated');
             }
-          })
-        }, 'GoogleDriveAuth _fetchLoginState');
+          });
+        }, 'ember-gdrive: Auth#authorizeWithGoogle');
       },
 
-      _fetchUserObject: function(handler) {
+      fetchGoogleUserObject: function() {
         return new Ember.RSVP.Promise(function(resolve, reject) {
           gapi.client.oauth2.userinfo.get().execute(function(user) {
             if (user.id) {
@@ -224,60 +229,8 @@ define("ember-gdrive/auth",
             }
           });
         }, 'GoogleDriveAuth _fetchUserObject');
-      },
-
-      states: {
-        loggedOut: Ember.State.create({
-          initialState: 'unknown',
-          unknown: Ember.State.create(),
-
-          enter: function() {
-            this.set('isUnauthenticated', true);
-          },
-          exit: function() {
-            this.set('isUnauthenticated', false);
-          },
-
-          checking: Ember.State.create(),
-          known: Ember.State.create(),
-          loginFailed: Ember.State.create()
-        }),
-
-        loggedIn: Ember.State.create({
-          enter: function(stateManager) {
-            stateManager.trigger('loggedin');
-            stateManager.set('isAuthenticated', true);
-          },
-          exit: function(stateManager) {
-            stateManager.trigger('loggedout');
-            stateManager.set('isAuthenticated', false);
-          }
-        }),
-
-        loggingIn: Ember.State.create({
-
-          fetchingUser: Ember.State.create(),
-
-          showingPrompt: Ember.State.create({
-            enter: function(stateManager) {
-              var handler = function(result) {
-                if (result && !result.error) {
-                  stateManager.transitionTo('fetchingUser');
-                }
-                else {
-                  stateManager.transitionTo('loggedOut.loginFailed');
-                }
-              };
-              gapi.auth.authorize({
-                client_id: stateManager.get('clientID'),
-                user_id: stateManager.get('userID'),
-                scope: stateManager.get('permissions'),
-                immediate: false
-              }, handler);
-            }
-          })
-        })
       }
+
     });
 
     __exports__["default"] = Auth;
@@ -463,8 +416,10 @@ define("ember-gdrive/document-source",
     var DocumentSource = Ember.Object.extend({
       id: null,
       document: null,
+      isLoaded: Ember.computed.bool('id'),
 
       load: function(documentId) {
+        Ember.assert('Document with id ' + this.get('id') + ' was already loaded', !this.get('isLoaded'));
         var documentSource = this;
 
         this.set('id', documentId);
@@ -903,6 +858,10 @@ define("ember-gdrive/router-auth",
   [],
   function() {
     "use strict";
+    var scopes = ['https://www.googleapis.com/auth/drive.install',
+      'https://www.googleapis.com/auth/drive.file',
+      'openid'].join(' ');
+
     Ember.Route.reopen({
       requiresAuth: false,
 
@@ -910,17 +869,26 @@ define("ember-gdrive/router-auth",
         var route = this;
 
         if (this.get('requiresAuth')) {
-          return this.get('auth').checkStatus().then(function(user) {
-            return user;
-          }, function(error) {
-            route.unauthenticated('unauthenticated');
-          }).then(function() {
-            return route.get('documentSource').load(transition.params.document.document_id);
-          }).then(function(doc) {
-            return doc;
-          }, function(reason) {
-            route.unauthenticated('unauthenticated');
-          });
+          window.somecallback = function(result) {
+            debugger;
+          };
+
+          gapi.auth.signIn({cookiepolicy: 'single_host_origin', clientid: ENV.GOOGLE_CLIENT_ID, callback: 'somecallback', scope: scopes});
+    //      return route.get('auth').login({authuser: -1}).then(function() {
+    //        return route.get('documentSource').load(transition.params.document.document_id);
+    //      });
+    //      return this.get('auth').checkStatus().then(function(user) {
+    //        return user;
+    //      }, function(error) {
+    //        return route.get('auth').login({authuser: -1});
+    //      }).then(function() {
+    //        return route.get('documentSource').load(transition.params.document.document_id);
+    //      }).then(function(doc) {
+    //        return doc;
+    //      }, function(reason) {
+    //        debugger;
+    //        route.unauthenticated(transition);
+    //      });
         }
       },
 
