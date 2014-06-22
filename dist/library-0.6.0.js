@@ -287,7 +287,7 @@ define("ember-gdrive/boot",
           }
           else if (state.get('isCreate')) {
             loader.load().then(function() {
-              return auth.checkStatus();
+              return auth.login({immediate: true});
             }).then(function(user) {
               var fileOptions = application.create();
               return GoogleDriveDocument.create(fileOptions);
@@ -875,11 +875,13 @@ define("ember-gdrive/router-auth",
       requiresAuth: false,
 
       beforeModel: function(transition) {
-        var route = this,
+        if (this.get('requiresAuth')) {
+          Ember.assert('requiresAuth can only be true when a document route is present', transition.params.document);
+
+          var route = this,
             documentId = transition.params.document.document_id,
             documentUserId = documentUserCache.get(documentId);
 
-        if (this.get('requiresAuth')) {
           return this.get('auth').login({immediate: true, user_id: documentUserId}).then(function(user) {
             return user;
           }).then(function(user) {
@@ -896,10 +898,6 @@ define("ember-gdrive/router-auth",
             });
           });
         }
-      },
-
-      unauthenticated: function() {
-        Ember.assert('You must override unauthenticated for the routes where requiresAuth is set to true');
       }
 
     });

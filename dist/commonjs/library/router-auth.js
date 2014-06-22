@@ -11,11 +11,13 @@ Ember.Route.reopen({
   requiresAuth: false,
 
   beforeModel: function(transition) {
-    var route = this,
+    if (this.get('requiresAuth')) {
+      Ember.assert('requiresAuth can only be true when a document route is present', transition.params.document);
+
+      var route = this,
         documentId = transition.params.document.document_id,
         documentUserId = documentUserCache.get(documentId);
 
-    if (this.get('requiresAuth')) {
       return this.get('auth').login({immediate: true, user_id: documentUserId}).then(function(user) {
         return user;
       }).then(function(user) {
@@ -32,10 +34,6 @@ Ember.Route.reopen({
         });
       });
     }
-  },
-
-  unauthenticated: function() {
-    Ember.assert('You must override unauthenticated for the routes where requiresAuth is set to true');
   }
 
 });

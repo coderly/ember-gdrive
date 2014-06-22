@@ -60,7 +60,7 @@ Ember.onLoad('Ember.Application', function(Application) {
       }
       else if (state.get('isCreate')) {
         loader.load().then(function() {
-          return auth.checkStatus();
+          return auth.login({immediate: true});
         }).then(function(user) {
           var fileOptions = application.create();
           return GoogleDriveDocument.create(fileOptions);
