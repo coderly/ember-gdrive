@@ -2,6 +2,7 @@
 var Reference = require("./reference")["default"];
 
 var Document = Ember.Object.extend(Ember.Evented, {
+  id: Ember.computed.alias('content.id'),
   content: null,
 
   init: function(googleDocument) {
@@ -74,6 +75,8 @@ Document.reopenClass({
     }).then(function(googleDocument) {
         return new Document(googleDocument);
     }, function(e) {
+        delete loadPromises[documentId]; // don't store error promises so they can be retried
+
         if(e.type == gapi.drive.realtime.ErrorType.TOKEN_REFRESH_REQUIRED) {
           throw new Error('Token refresh required');
         } else if(e.type == gapi.drive.realtime.ErrorType.CLIENT_ERROR) {
@@ -89,8 +92,7 @@ Document.reopenClass({
     return loadPromises[documentId];
   },
   create: function(params) {
-    var _this = this;
-    return _this._sendCreateRequest(params).then(function(googleFile) {
+    return this._sendCreateRequest(params).then(function(googleFile) {
       if (googleFile.error) {
         return Ember.RSVP.reject(new Error(googleFile.error.message));
       }

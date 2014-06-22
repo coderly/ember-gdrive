@@ -2,6 +2,10 @@ var INSTALL_SCOPE = 'https://www.googleapis.com/auth/drive.install',
     FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file',
     OPENID_SCOPE = 'openid';
 
+var merge = function(a, b) {
+  return Ember.merge(a || {}, b || {});
+};
+
 var Auth = Ember.Object.extend({
   isAuthenticated: false,
   isUnauthenticated: Ember.computed.not('isAuthenticated'),
@@ -12,44 +16,27 @@ var Auth = Ember.Object.extend({
   clientID: ENV.GOOGLE_CLIENT_ID,
   permissions: [INSTALL_SCOPE, FILE_SCOPE, OPENID_SCOPE],
 
-  token: function() {
-    return gapi.auth.getToken().access_token;
-  }.property().volatile(),
+  login: function(options) {
+    var auth = this;
 
-  checkStatus: function() {
     if (this.get('isAuthenticated')) {
       return Ember.RSVP.resolve(this.get('user'));
     }
 
-    var auth = this;
-    return this.authorizeWithGoogle({immediate: true}).then(function() {
-      auth.set('isAuthenticated', true);
-
-      return auth.fetchGoogleUserObject();
-    }).then(function(user) {
-      auth.set('user', user);
-      return user;
-    });
-  },
-
-  login: function(options) {
-    var auth = this;
     return this.authorizeWithGoogle(options).then(function(result) {
       auth.set('isAuthenticated', true);
-
       return auth.fetchGoogleUserObject();
     }).then(function(user) {
       auth.set('user', user);
-
-      debugger;
       return user;
     });
   },
 
   authorizeWithGoogle: function(options) {
-    var finalOptions = Ember.merge(options, {
+    var finalOptions = merge(options || {}, {
       client_id: this.get('clientID'),
-      scope: this.get('permissions')
+      scope: this.get('permissions'),
+      authuser: -1
     });
 
     return new Ember.RSVP.Promise(function(resolve, reject) {

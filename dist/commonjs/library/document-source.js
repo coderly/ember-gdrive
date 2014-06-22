@@ -8,12 +8,13 @@ var DocumentSource = Ember.Object.extend({
 
   load: function(documentId) {
     Ember.assert('Document with id ' + this.get('id') + ' was already loaded', !this.get('isLoaded'));
+
     var documentSource = this;
-
-    this.set('id', documentId);
-
     return Document.find( documentId ).then(function(doc) {
-      return documentSource.set('document', doc);
+      documentSource.set('id', documentId);
+      documentSource.set('document', doc);
+
+      return doc;
     });
   }
 

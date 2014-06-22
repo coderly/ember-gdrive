@@ -156,6 +156,10 @@ define("ember-gdrive/auth",
         FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file',
         OPENID_SCOPE = 'openid';
 
+    var merge = function(a, b) {
+      return Ember.merge(a || {}, b || {});
+    };
+
     var Auth = Ember.Object.extend({
       isAuthenticated: false,
       isUnauthenticated: Ember.computed.not('isAuthenticated'),
@@ -166,44 +170,27 @@ define("ember-gdrive/auth",
       clientID: ENV.GOOGLE_CLIENT_ID,
       permissions: [INSTALL_SCOPE, FILE_SCOPE, OPENID_SCOPE],
 
-      token: function() {
-        return gapi.auth.getToken().access_token;
-      }.property().volatile(),
+      login: function(options) {
+        var auth = this;
 
-      checkStatus: function() {
         if (this.get('isAuthenticated')) {
           return Ember.RSVP.resolve(this.get('user'));
         }
 
-        var auth = this;
-        return this.authorizeWithGoogle({immediate: true}).then(function() {
-          auth.set('isAuthenticated', true);
-
-          return auth.fetchGoogleUserObject();
-        }).then(function(user) {
-          auth.set('user', user);
-          return user;
-        });
-      },
-
-      login: function(options) {
-        var auth = this;
         return this.authorizeWithGoogle(options).then(function(result) {
           auth.set('isAuthenticated', true);
-
           return auth.fetchGoogleUserObject();
         }).then(function(user) {
           auth.set('user', user);
-
-          debugger;
           return user;
         });
       },
 
       authorizeWithGoogle: function(options) {
-        var finalOptions = Ember.merge(options, {
+        var finalOptions = merge(options || {}, {
           client_id: this.get('clientID'),
-          scope: this.get('permissions')
+          scope: this.get('permissions'),
+          authuser: -1
         });
 
         return new Ember.RSVP.Promise(function(resolve, reject) {
@@ -420,12 +407,13 @@ define("ember-gdrive/document-source",
 
       load: function(documentId) {
         Ember.assert('Document with id ' + this.get('id') + ' was already loaded', !this.get('isLoaded'));
+
         var documentSource = this;
-
-        this.set('id', documentId);
-
         return Document.find( documentId ).then(function(doc) {
-          return documentSource.set('document', doc);
+          documentSource.set('id', documentId);
+          documentSource.set('document', doc);
+
+          return doc;
         });
       }
 
@@ -440,6 +428,7 @@ define("ember-gdrive/document",
     var Reference = __dependency1__["default"];
 
     var Document = Ember.Object.extend(Ember.Evented, {
+      id: Ember.computed.alias('content.id'),
       content: null,
 
       init: function(googleDocument) {
@@ -512,6 +501,8 @@ define("ember-gdrive/document",
         }).then(function(googleDocument) {
             return new Document(googleDocument);
         }, function(e) {
+            delete loadPromises[documentId]; // don't store error promises so they can be retried
+
             if(e.type == gapi.drive.realtime.ErrorType.TOKEN_REFRESH_REQUIRED) {
               throw new Error('Token refresh required');
             } else if(e.type == gapi.drive.realtime.ErrorType.CLIENT_ERROR) {
@@ -527,8 +518,7 @@ define("ember-gdrive/document",
         return loadPromises[documentId];
       },
       create: function(params) {
-        var _this = this;
-        return _this._sendCreateRequest(params).then(function(googleFile) {
+        return this._sendCreateRequest(params).then(function(googleFile) {
           if (googleFile.error) {
             return Ember.RSVP.reject(new Error(googleFile.error.message));
           }
@@ -596,6 +586,21 @@ define("ember-gdrive/loader",
 
 
     __exports__["default"] = loader;
+  });
+define("ember-gdrive/local-cache", 
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+    var LocalCache = function(namespace) {
+      this.namespace = namespace;
+    };
+    LocalCache.prototype.get = function(id) {
+      return localStorage.getItem(this.namespace + ':' + id);
+    };
+    LocalCache.prototype.set = function(id, value) {
+      localStorage.setItem(this.namespace + ':' + id, value);
+    };
+    __exports__["default"] = LocalCache;
   });
 define("ember-gdrive/picker", 
   ["exports"],
@@ -855,40 +860,41 @@ define("ember-gdrive/reference",
     __exports__["default"] = MapReference;
   });
 define("ember-gdrive/router-auth", 
-  [],
-  function() {
+  ["./local-cache"],
+  function(__dependency1__) {
     "use strict";
     var scopes = ['https://www.googleapis.com/auth/drive.install',
       'https://www.googleapis.com/auth/drive.file',
       'openid'].join(' ');
 
+    var LocalCache = __dependency1__["default"];
+
+    var documentUserCache = new LocalCache('document:user');
+
     Ember.Route.reopen({
       requiresAuth: false,
 
       beforeModel: function(transition) {
-        var route = this;
+        var route = this,
+            documentId = transition.params.document.document_id,
+            documentUserId = documentUserCache.get(documentId);
 
         if (this.get('requiresAuth')) {
-          window.somecallback = function(result) {
-            debugger;
-          };
-
-          gapi.auth.signIn({cookiepolicy: 'single_host_origin', clientid: ENV.GOOGLE_CLIENT_ID, callback: 'somecallback', scope: scopes});
-    //      return route.get('auth').login({authuser: -1}).then(function() {
-    //        return route.get('documentSource').load(transition.params.document.document_id);
-    //      });
-    //      return this.get('auth').checkStatus().then(function(user) {
-    //        return user;
-    //      }, function(error) {
-    //        return route.get('auth').login({authuser: -1});
-    //      }).then(function() {
-    //        return route.get('documentSource').load(transition.params.document.document_id);
-    //      }).then(function(doc) {
-    //        return doc;
-    //      }, function(reason) {
-    //        debugger;
-    //        route.unauthenticated(transition);
-    //      });
+          return this.get('auth').login({immediate: true, user_id: documentUserId}).then(function(user) {
+            return user;
+          }).then(function(user) {
+            return route.get('documentSource').load(documentId);
+          }).then(function(document) {
+            documentUserCache.set(route.get('documentSource.id'), route.get('auth.user.id'));
+            return document;
+          }, function(reason) {
+            return route.get('auth').login().then(function(user) {
+              return route.get('documentSource').load(documentId).then(function(document) {
+                documentUserCache.set(route.get('documentSource.id'), route.get('auth.user.id'));
+                return document;
+              });
+            });
+          });
         }
       },
 
