@@ -2,12 +2,14 @@
 var Reference = require("./reference")["default"];
 
 var Document = Ember.Object.extend(Ember.Evented, {
-  id: Ember.computed.alias('content.id'),
+  id: null,
   content: null,
 
-  init: function(googleDocument) {
+  init: function(googleDocument, documentId) {
     Ember.assert('You must pass in a valid google document.', !!googleDocument);
+
     this.set('content', googleDocument);
+    this.set('id', documentId);
   },
 
   ref: function() {
@@ -73,7 +75,7 @@ Document.reopenClass({
         function(e) { Ember.run(null, reject, e); }
       );
     }).then(function(googleDocument) {
-        return new Document(googleDocument);
+        return new Document(googleDocument, documentId);
     }, function(e) {
         delete loadPromises[documentId]; // don't store error promises so they can be retried
 
@@ -97,7 +99,7 @@ Document.reopenClass({
         return Ember.RSVP.reject(new Error(googleFile.error.message));
       }
       else {
-        return new Document(googleFile);
+        return Document.find(googleFile.id);
       }
     });
   },

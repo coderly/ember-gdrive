@@ -4,8 +4,8 @@ import loader from './loader';
 import LocalCache from './local-cache';
 
 var DocumentSource = Ember.Object.extend({
-  id: null,
   document: null,
+  id: Ember.computed.alias('document.id'),
   isLoaded: Ember.computed.bool('id'),
 
   authAndLoad: function(documentId) {
@@ -17,7 +17,7 @@ var DocumentSource = Ember.Object.extend({
 
   openOrCreate: function(route) {
     var state = State.create(),
-      auth = this.get('auth');
+        auth = this.get('auth');
 
     if (state.get('isOpen')) {
       route.transitionTo('document', state.get('fileID'));
@@ -28,8 +28,8 @@ var DocumentSource = Ember.Object.extend({
       }).then(function() {
         var title = prompt('Enter a document name') || 'Untitled document';
         return Document.create({title: title});
-      }).then(function() {
-        return route.transitionTo('document', state.get('fileID'));
+      }).then(function(document) {
+        return route.transitionTo('document', document.get('id'));
       });
     }
   },
@@ -52,7 +52,6 @@ var DocumentSource = Ember.Object.extend({
         auth = this.get('auth');
 
     return Document.find( documentId ).then(function(doc) {
-      documentSource.set('id', documentId);
       documentSource.set('document', doc);
       documentUserCache.set(documentId, auth.get('user.id'));
 

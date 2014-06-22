@@ -384,8 +384,8 @@ define("ember-gdrive/document-source",
     var LocalCache = __dependency4__["default"];
 
     var DocumentSource = Ember.Object.extend({
-      id: null,
       document: null,
+      id: Ember.computed.alias('document.id'),
       isLoaded: Ember.computed.bool('id'),
 
       authAndLoad: function(documentId) {
@@ -397,7 +397,7 @@ define("ember-gdrive/document-source",
 
       openOrCreate: function(route) {
         var state = State.create(),
-          auth = this.get('auth');
+            auth = this.get('auth');
 
         if (state.get('isOpen')) {
           route.transitionTo('document', state.get('fileID'));
@@ -408,8 +408,8 @@ define("ember-gdrive/document-source",
           }).then(function() {
             var title = prompt('Enter a document name') || 'Untitled document';
             return Document.create({title: title});
-          }).then(function() {
-            return route.transitionTo('document', state.get('fileID'));
+          }).then(function(document) {
+            return route.transitionTo('document', document.get('id'));
           });
         }
       },
@@ -432,7 +432,6 @@ define("ember-gdrive/document-source",
             auth = this.get('auth');
 
         return Document.find( documentId ).then(function(doc) {
-          documentSource.set('id', documentId);
           documentSource.set('document', doc);
           documentUserCache.set(documentId, auth.get('user.id'));
 
@@ -455,12 +454,14 @@ define("ember-gdrive/document",
     var Reference = __dependency1__["default"];
 
     var Document = Ember.Object.extend(Ember.Evented, {
-      id: Ember.computed.alias('content.id'),
+      id: null,
       content: null,
 
-      init: function(googleDocument) {
+      init: function(googleDocument, documentId) {
         Ember.assert('You must pass in a valid google document.', !!googleDocument);
+
         this.set('content', googleDocument);
+        this.set('id', documentId);
       },
 
       ref: function() {
@@ -526,7 +527,7 @@ define("ember-gdrive/document",
             function(e) { Ember.run(null, reject, e); }
           );
         }).then(function(googleDocument) {
-            return new Document(googleDocument);
+            return new Document(googleDocument, documentId);
         }, function(e) {
             delete loadPromises[documentId]; // don't store error promises so they can be retried
 
@@ -550,7 +551,7 @@ define("ember-gdrive/document",
             return Ember.RSVP.reject(new Error(googleFile.error.message));
           }
           else {
-            return new Document(googleFile);
+            return Document.find(googleFile.id);
           }
         });
       },
