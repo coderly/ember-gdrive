@@ -10,6 +10,7 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
 
   documentSource: null,
   document: Ember.computed.alias('documentSource.document'),
+  ref: Ember.computed.alias('document.ref'),
 
   unresolvedLocalChanges: 0,
 
@@ -45,10 +46,6 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
       }
     }
   },
-
-  ref: function() {
-    return this.get('document').ref();
-  }.property('document'),
 
   changeObserver: function() {
     return ChangeObserver.create({ ref: this.get('ref'), target: this });

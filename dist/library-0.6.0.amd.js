@@ -13,6 +13,7 @@ define("ember-gdrive/adapter",
 
       documentSource: null,
       document: Ember.computed.alias('documentSource.document'),
+      ref: Ember.computed.alias('document.ref'),
 
       unresolvedLocalChanges: 0,
 
@@ -48,10 +49,6 @@ define("ember-gdrive/adapter",
           }
         }
       },
-
-      ref: function() {
-        return this.get('document').ref();
-      }.property('document'),
 
       changeObserver: function() {
         return ChangeObserver.create({ ref: this.get('ref'), target: this });
@@ -501,7 +498,17 @@ define("ember-gdrive/document",
           null,
           this.get('root')
         );
-      },
+      }.property('model', 'root').readOnly(),
+
+      root: function() {
+        return this.get('model').getRoot();
+      }.property('model').readOnly(),
+
+      model: function() {
+        return this.get('content').getModel();
+      }.property('content').readOnly(),
+
+      /* undo/redo */
 
       beginSave: function() {
         this.get('model').beginCompoundOperation();
@@ -510,16 +517,6 @@ define("ember-gdrive/document",
       endSave: function() {
         this.get('model').endCompoundOperation();
       },
-
-      root: function() {
-        return this.get('model').getRoot();
-      }.property('model'),
-
-      model: function() {
-        return this.get('content').getModel();
-      }.property('content'),
-
-      /* undo/redo */
 
       undo: function() {
         if (this.canUndo()) {
@@ -540,6 +537,7 @@ define("ember-gdrive/document",
       canRedo: function() {
         return this.get('model').canRedo;
       }
+
     });
 
     var loadPromises = {};

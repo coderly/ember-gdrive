@@ -16,7 +16,17 @@ var Document = Ember.Object.extend(Ember.Evented, {
       null,
       this.get('root')
     );
-  },
+  }.property('model', 'root').readOnly(),
+
+  root: function() {
+    return this.get('model').getRoot();
+  }.property('model').readOnly(),
+
+  model: function() {
+    return this.get('content').getModel();
+  }.property('content').readOnly(),
+
+  /* undo/redo */
 
   beginSave: function() {
     this.get('model').beginCompoundOperation();
@@ -25,16 +35,6 @@ var Document = Ember.Object.extend(Ember.Evented, {
   endSave: function() {
     this.get('model').endCompoundOperation();
   },
-
-  root: function() {
-    return this.get('model').getRoot();
-  }.property('model'),
-
-  model: function() {
-    return this.get('content').getModel();
-  }.property('content'),
-
-  /* undo/redo */
 
   undo: function() {
     if (this.canUndo()) {
@@ -55,6 +55,7 @@ var Document = Ember.Object.extend(Ember.Evented, {
   canRedo: function() {
     return this.get('model').canRedo;
   }
+
 });
 
 var loadPromises = {};
