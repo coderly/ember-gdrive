@@ -9,7 +9,8 @@ exports["default"] = Ember.Object.extend(Ember.ActionHandler, {
   observeRecordData: function(store, typeKey, id) {
     var observer = this,
         observedMap = this.get('observedMap'),
-        key = [normalizeTypeKey(typeKey), id].join('/');
+        key = [normalizeTypeKey(typeKey), id].join('/'),
+        ref = this.get('ref');
 
     if (this.contains(key)) {
       return Ember.RSVP.Promise.resolve();
@@ -18,21 +19,19 @@ exports["default"] = Ember.Object.extend(Ember.ActionHandler, {
       observedMap[key] = true; // can set this to the promise and return that every time
     }
 
-    return this.get('ref').then(function(ref) {
-      ref.get(normalizeTypeKey(typeKey), id).changed(function(e) {
-
-        if (e.type == 'object_changed')
-          Ember.run(function(){
-            observer.recordDataChanged(store, typeKey, id, e);
-          });
-      });
+    ref.get(normalizeTypeKey(typeKey), id).changed(function(e) {
+      if (e.type == 'object_changed')
+        Ember.run(function(){
+          observer.recordDataChanged(store, typeKey, id, e);
+        });
     });
   },
 
   observeIdentityMap: function(store, typeKey) {
     var observer = this,
         observedMap = this.get('observedMap'),
-        key = [normalizeTypeKey(typeKey)].join('/');
+        key = [normalizeTypeKey(typeKey)].join('/'),
+        ref = this.get('ref');
 
     if (this.contains(key)) {
       return Ember.RSVP.Promise.resolve();
@@ -41,13 +40,10 @@ exports["default"] = Ember.Object.extend(Ember.ActionHandler, {
       observedMap[key] = true;
     }
 
-    return this.get('ref').then(function(ref) {
-      ref.get(normalizeTypeKey(typeKey)).materialize().changed(function(e) {
-        if (e.type == 'value_changed')
-          Ember.run.once(observer, 'identityMapChanged', store, typeKey, e);
-      });
+    ref.get(normalizeTypeKey(typeKey)).materialize().changed(function(e) {
+      if (e.type == 'value_changed')
+        Ember.run.once(observer, 'identityMapChanged', store, typeKey, e);
     });
-
   },
 
   contains: function(key) {
@@ -56,38 +52,35 @@ exports["default"] = Ember.Object.extend(Ember.ActionHandler, {
   },
 
   recordDataChanged: function(store, typeKey, id, e) {
+    var ref = this.get('ref');
     if (e.isLocal) {
-      var observer = this;
-      this.get('ref').then(function(ref) {
-        var data = ref.get(normalizeTypeKey(typeKey), id).value();
-        observer.send('recordUpdatedLocally', store, typeKey, data);
-      });
+      var data = ref.get(normalizeTypeKey(typeKey), id).value();
+      this.send('recordUpdatedLocally', store, typeKey, data);
     }
     else {
-      var observer = this;
-      this.get('ref').then(function(ref) {
-        var data = ref.get(normalizeTypeKey(typeKey), id).value();
-        observer.send('recordUpdatedRemotely', store, typeKey, data);
-      });
+      var data = ref.get(normalizeTypeKey(typeKey), id).value();
+      this.send('recordUpdatedRemotely', store, typeKey, data);
     }
   },
 
   identityMapChanged: function(store, typeKey, e) {
-    var observer = this;
+    var ref = this.get('ref');
 
     if (e.isLocal && e.oldValue == null && e.newValue) {
       this.send('recordCreatedLocally', store, typeKey, e.newValue.get('id'));
     }
+
     else if (e.isLocal && e.oldValue && e.newValue == null) {
       this.send('recordDeletedLocally', store, typeKey, e.oldValue.get('id'));
     }
+
     else if (!e.isLocal && e.oldValue == null && e.newValue) {
-      var newRecordId = e.newValue.get('id');
-      this.get('ref').then(function(ref) {
-        var data = ref.get(normalizeTypeKey(typeKey), newRecordId).value();
-        observer.send('recordCreatedRemotely', store, typeKey, data);
-      });
+      var newRecordId = e.newValue.get('id'),
+          data = ref.get(normalizeTypeKey(typeKey), newRecordId).value();
+
+      this.send('recordCreatedRemotely', store, typeKey, data);
     }
+
     else if (!e.isLocal && e.oldValue && e.newValue == null) {
       var deletedRecordId = e.oldValue.get('id');
       this.send('recordDeletedRemotely', store, typeKey, deletedRecordId);

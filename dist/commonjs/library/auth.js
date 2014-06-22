@@ -9,9 +9,6 @@ var Auth = Ember.StateManager.extend({
 
   user: null,
 
-  // isLoggedIn is deprecated but used elsewhere
-  isLoggedIn: Ember.computed.alias('isAuthenticated'),
-
   clientID: ENV.GOOGLE_CLIENT_ID,
   userID: Ember.computed.alias('user.id'),
   permissions: [INSTALL_SCOPE, FILE_SCOPE, OPENID_SCOPE],

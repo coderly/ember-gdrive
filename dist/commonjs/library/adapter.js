@@ -6,29 +6,10 @@ var ChangeObserver = require("./change-observer")["default"];
 var modelKey = require("./util").modelKey;
 
 var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
-
-  init: function() {
-    this._super();
-  },
-
-  documentSource: null,
-  documentId: Ember.computed.alias('documentSource.id'),
-
   defaultSerializer: '-google-drive',
 
-  documentPromise: function() {
-    var adapter = this;
-    Ember.assert('A document id was not assigned. Make sure you set a document ' +
-                 'id in a route before the store is accessed', this.get('documentId'));
-
-    return Document.find( this.get('documentId') ).then(function(doc) {
-      adapter.set('document', doc);
-      return doc;
-    });
-
-  }.property('documentId'),
-
-  document: null,
+  documentSource: null,
+  document: Ember.computed.alias('documentSource.document'),
 
   unresolvedLocalChanges: 0,
 
@@ -66,11 +47,8 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
   },
 
   ref: function() {
-    return this.get('documentPromise').then(function(document) {
-      document.ref().then(function(r) { window.ref = r; });
-      return document.ref();
-    });
-  }.property().readOnly(),
+    return this.get('document').ref();
+  }.property('document'),
 
   changeObserver: function() {
     return ChangeObserver.create({ ref: this.get('ref'), target: this });
@@ -89,73 +67,63 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
   },
 
   find: function(store, type, id) {
-    var adapter = this;
-    return this.get('ref').then(function(ref) {
-      adapter.observeRecordData(store, type.typeKey, id);
-      return ref.get(modelKey(type), id).value();
-    });
+    this.observeRecordData(store, type.typeKey, id);
+    return Ember.RSVP.resolve( this.get('ref').get(modelKey(type), id).value() );
   },
 
   createRecord: function(store, type, record) {
-    var adapter = this;
+    var serializedRecord = record.serialize({includeId: true}),
+        id = record.get('id'),
+        ref = this.get('ref');
 
-    return this.get('ref').then(function(ref) {
-      var serializedRecord = record.serialize({includeId: true}),
-          id = record.get('id');
+    this.beginSave();
+    ref.get(modelKey(type), id).set(serializedRecord);
+    this.endSave();
 
-      adapter.beginSave();
-      ref.get(modelKey(type), id).set(serializedRecord);
-      adapter.endSave();
+    this.observeRecordData(store, type.typeKey, id);
 
-      adapter.observeRecordData(store, type.typeKey, id);
-
-      return ref.get(modelKey(type), id).value();
-    });
+    return Ember.RSVP.resolve( this.get('ref').get(modelKey(type), id).value() );
   },
 
   updateRecord: function(store, type, record) {
-    var adapter = this;
-    return this.get('ref').then(function(ref) {
-      var serializedRecord = record.serialize({includeId: true}),
-          id = record.get('id');
+    var serializedRecord = record.serialize({includeId: true}),
+        id = record.get('id'),
+        ref = this.get('ref');
 
-      adapter.beginSave();
-      ref.get(modelKey(type), id).set(serializedRecord);
-      adapter.endSave();
+    this.beginSave();
+    ref.get(modelKey(type), id).set(serializedRecord);
+    this.endSave();
 
-      adapter.observeRecordData(store, type.typeKey, id);
+    this.observeRecordData(store, type.typeKey, id);
 
-      return ref.get(modelKey(type), id).value();
-    });
+    return Ember.RSVP.resolve( ref.get(modelKey(type), id).value() );
   },
 
   findAll: function(store, type) {
-    var adapter = this;
+    var adapter = this,
+        ref = this.get('ref'),
+        identityMap = ref.get(modelKey(type)).value() || {},
+        keys = ref.get(modelKey(type)).keys(),
+        serializedRecords = [];
 
-    return this.get('ref').then(function(ref) {
-      var identityMap = ref.get(modelKey(type)).value() || {};
-      var keys = ref.get(modelKey(type)).keys();
-      var serializedRecords = [];
+    for (var i = 0; i < keys.length; i++) {
+      serializedRecords.push( identityMap[ keys[i] ] );
+    }
 
-      for (var i = 0; i < keys.length; i++) {
-        serializedRecords.push( identityMap[ keys[i] ] );
-      }
+    this.observeIdentityMap(store, type.typeKey);
 
-      adapter.observeIdentityMap(store, type.typeKey);
-
-      serializedRecords.forEach(function(data) {
-        adapter.observeRecordData(store, type.typeKey, data.id);
-      });
-
-      return serializedRecords;
+    serializedRecords.forEach(function(data) {
+      adapter.observeRecordData(store, type.typeKey, data.id);
     });
+
+    return Ember.RSVP.resolve( serializedRecords );
   },
 
   deleteRecord: function(store, type, record) {
-    return this.get('ref').then(function(ref) {
-      var id = record.get('id');
-      ref.get(modelKey(type)).delete(id);
-    });
+    var ref = this.get('ref');
+    var id = record.get('id');
+    ref.get(modelKey(type)).delete(id);
+    return Ember.RSVP.resolve();
   },
 
   undo: function() {

@@ -2,63 +2,20 @@
 var Reference = require("./reference")["default"];
 
 var Document = Ember.Object.extend(Ember.Evented, {
-  id: Ember.computed.alias('file.id'),
-  title: Ember.computed.alias('file.title'),
-  isEditable: Ember.computed.alias('file.editable'),
+  content: null,
 
-  file: null,
-  doc: null,
-
-  isLoaded: false,
-  loadPromise: null,
-
-  init: function(file) {
-    Ember.assert('You must pass in a valid google file.', !!file);
-
-    this.set('file', file);
-    this.get('collaborators', Ember.A());
-
-    this.load();
-  },
-
-  load: function() {
-    if (this.get('loadPromise'))
-      return this.get('loadPromise');
-
-    var document = this;
-
-    var onLoad = function() {
-      document.onLoad.apply(document, arguments);
-      document.set('isLoaded', true);
-    };
-
-    var onError = function() {
-      document.onError.apply(document, arguments);
-    };
-
-    var loadPromise = new Ember.RSVP.Promise(function(resolve, reject){
-      gapi.drive.realtime.load(document.get('id'),
-        function(d){ Ember.run(null, resolve, d); },
-        Ember.K,
-        function(e){ Ember.run(null, reject, e); }
-      );
-    }).then(onLoad, onError).then(function(){ return document; });
-
-    this.set('loadPromise', loadPromise);
-
-    return loadPromise;
+  init: function(googleDocument) {
+    Ember.assert('You must pass in a valid google document.', !!googleDocument);
+    this.set('content', googleDocument);
   },
 
   ref: function() {
-    return this.load().then(function(document) {
-      window.doc = document;
-      return new Reference(
-        document.get('model'),
-        null,
-        null,
-        document.get('root')
-      );
-    });
+    return new Reference(
+      this.get('model'),
+      null,
+      null,
+      this.get('root')
+    );
   },
 
   beginSave: function() {
@@ -74,26 +31,8 @@ var Document = Ember.Object.extend(Ember.Evented, {
   }.property('model'),
 
   model: function() {
-    return this.get('doc').getModel();
-  }.property('doc'),
-
-  onLoad: function(doc) {
-    this.set('doc', doc);
-    this.trigger('loaded');
-
-    this.refreshCollaborators();
-    this.setupCollaboratorEventListeners();
-  },
-
-  onError: function(e) {
-    if(e.type == gapi.drive.realtime.ErrorType.TOKEN_REFRESH_REQUIRED) {
-      this.authorizeWithGoogle();
-    } else if(e.type == gapi.drive.realtime.ErrorType.CLIENT_ERROR) {
-      alert("An Error happened: " + e.message);
-    } else if(e.type == gapi.drive.realtime.ErrorType.NOT_FOUND) {
-      alert("The file was not found. It does not exist or you do not have read access to the file.");
-    }
-  },
+    return this.get('content').getModel();
+  }.property('content'),
 
   /* undo/redo */
 
@@ -115,49 +54,38 @@ var Document = Ember.Object.extend(Ember.Evented, {
 
   canRedo: function() {
     return this.get('model').canRedo;
-  },
-
-  /* collaborator code */
-  collaborators: [],
-
-  refreshCollaborators: function() {
-    var collaboratorRecords = this.get('doc').getCollaborators();
-    this.set('collaborators', collaboratorRecords);
-  },
-
-  setupCollaboratorEventListeners: function() {
-    var doc = this.get('doc');
-    var _this = this;
-
-    doc.addEventListener(gapi.drive.realtime.EventType.COLLABORATOR_LEFT, function() {
-      _this.refreshCollaborators();
-    });
-
-    doc.addEventListener(gapi.drive.realtime.EventType.COLLABORATOR_JOINED, function() {
-      _this.refreshCollaborators();
-    });
   }
 });
 
- var filePromises = {};
+var loadPromises = {};
 
 Document.reopenClass({
-  find: function(fileID) {
-    if (filePromises[fileID])
-      return filePromises[fileID];
+  find: function(documentId) {
+    if (loadPromises[documentId])
+      return loadPromises[documentId];
 
-    filePromises[fileID] = new Ember.RSVP.Promise(function(resolve, reject) {
-      gapi.client.drive.files.get({fileId: fileID}).execute(function(googleFile) {
-        if (googleFile.error) {
-          reject(new Error(googleFile.error.message));
+    loadPromises[documentId] = new Ember.RSVP.Promise(function(resolve, reject){
+      gapi.drive.realtime.load(documentId,
+        function(d) { Ember.run(null, resolve, d); },
+        Ember.K,
+        function(e) { Ember.run(null, reject, e); }
+      );
+    }).then(function(googleDocument) {
+        return new Document(googleDocument);
+    }, function(e) {
+        if(e.type == gapi.drive.realtime.ErrorType.TOKEN_REFRESH_REQUIRED) {
+          throw new Error('Token refresh required');
+        } else if(e.type == gapi.drive.realtime.ErrorType.CLIENT_ERROR) {
+          throw new Error("An Error happened: " + e.message);
+        } else if(e.type == gapi.drive.realtime.ErrorType.NOT_FOUND) {
+          throw new Error("The file was not found. It does not exist or you do not have read access to the file.");
         }
         else {
-          resolve( new Document(googleFile) );
+          throw new Error("Unknown error occured'")
         }
-      });
     });
 
-    return filePromises[fileID];
+    return loadPromises[documentId];
   },
   create: function(params) {
     var _this = this;
