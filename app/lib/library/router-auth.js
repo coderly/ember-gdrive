@@ -31,10 +31,6 @@ Ember.Route.reopen({
         });
       });
     }
-  },
-
-  unauthenticated: function() {
-    Ember.assert('You must override unauthenticated for the routes where requiresAuth is set to true');
   }
 
 });
