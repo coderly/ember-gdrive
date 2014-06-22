@@ -5,9 +5,6 @@ var loader = require("ember-gdrive/loader")["default"];
 
 var GoogleDriveAdapter = require("ember-gdrive/adapter")["default"];
 var GoogleDriveSerializer = require("ember-gdrive/serializer")["default"];
-var GoogleDriveDocument = require("ember-gdrive/document")["default"];
-
-var State = require("ember-gdrive/state")["default"];
 
 /**
  Register the serializer and adapter
@@ -26,6 +23,8 @@ Ember.onLoad('Ember.Application', function(Application) {
       application.inject('route', 'documentSource', 'document-source:main');
       application.inject('controller', 'documentSource', 'document-source:main');
       application.inject('adapter:application', 'documentSource', 'document-source:main');
+
+      application.inject('document-source:main', 'auth', 'auth:google');
     }
   });
 
@@ -49,25 +48,6 @@ Ember.onLoad('Ember.Application', function(Application) {
 
       application.inject('controller', 'auth', 'auth:google');
       application.inject('route', 'auth', 'auth:google');
-
-
-      // open file if present
-      var auth = container.lookup('auth:google');
-      var state = State.create();
-
-      if (state.get('isOpen')) {
-        application.open(state.get('fileID'));
-      }
-      else if (state.get('isCreate')) {
-        loader.load().then(function() {
-          return auth.login({immediate: true});
-        }).then(function(user) {
-          var fileOptions = application.create();
-          return GoogleDriveDocument.create(fileOptions);
-        }).then(function(doc) {
-          application.open(doc.get('id'))
-        });
-      }
     }
   });
 

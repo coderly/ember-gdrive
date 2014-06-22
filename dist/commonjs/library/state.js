@@ -1,13 +1,13 @@
 "use strict";
-var queryParams = function() {
-  var params = {};
-  location.search.substr(1).split("&").forEach(function(item) {
-    params[item.split("=")[0]] = decodeURIComponent(item.split("=")[1]);
-  });
-  return params;
-};
+var extractQueryParams = require("./uri").extractQueryParams;
+var clearQueryString = require("./uri").clearQueryString;
 
 exports["default"] = Ember.Object.extend({
+
+  init: function() {
+    this.set('queryParams', extractQueryParams());
+    clearQueryString();
+  },
 
   fileID: function() {
     return this.get('fileIDs').objectAt(0);
@@ -21,10 +21,6 @@ exports["default"] = Ember.Object.extend({
     return this.get('action') == 'create';
   }.property('action'),
 
-  queryParams: function() {
-    return queryParams();
-  }.property(),
-
   state: function() {
     try {
       return JSON.parse(this.get('queryParams.state'));
@@ -36,5 +32,8 @@ exports["default"] = Ember.Object.extend({
   action: Ember.computed.alias('state.action'),
   userID: Ember.computed.alias('state.userId'),
   fileIDs: Ember.computed.alias('state.ids'),
-  folderID: Ember.computed.alias('state.folderId')
+  folderID: Ember.computed.alias('state.folderId'),
+
+  queryParams: {}
+
 });
