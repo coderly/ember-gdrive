@@ -4,12 +4,15 @@ var Reference = require("./reference")["default"];
 var Document = Ember.Object.extend(Ember.Evented, {
   id: null,
   content: null,
+  title: Ember.computed.alias('meta.title'),
 
   init: function(googleDocument, documentId) {
     Ember.assert('You must pass in a valid google document.', !!googleDocument);
 
     this.set('content', googleDocument);
     this.set('id', documentId);
+
+    this._loadMeta();
   },
 
   ref: function() {
@@ -28,6 +31,8 @@ var Document = Ember.Object.extend(Ember.Evented, {
   model: function() {
     return this.get('content').getModel();
   }.property('content').readOnly(),
+
+  meta: {},
 
   /* undo/redo */
 
@@ -57,6 +62,26 @@ var Document = Ember.Object.extend(Ember.Evented, {
 
   canRedo: function() {
     return this.get('model').canRedo;
+  },
+
+  _loadMeta: function() {
+    var document = this;
+    this._fetchMeta(this.get('id')).then(function(meta) {
+      document.set('meta', meta);
+    });
+  },
+
+  _fetchMeta: function(documentId) {
+    return new Ember.RSVP.Promise(function(resolve, reject) {
+      gapi.client.drive.files.get({fileId: documentId}).execute(function(googleFileMeta) {
+        if (googleFileMeta.error) {
+          reject(googleFileMeta);
+        }
+        else {
+          resolve( googleFileMeta );
+        }
+      });
+    });
   }
 
 });
