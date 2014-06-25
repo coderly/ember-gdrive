@@ -11,8 +11,6 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
   document: Ember.computed.alias('documentSource.document'),
   ref: Ember.computed.alias('document.ref'),
 
-  unresolvedLocalChanges: 0,
-
   _actions: {
     recordCreatedRemotely: function(store, typeKey, data) {
       store.push(typeKey, data);
@@ -26,22 +24,17 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
     },
 
     recordCreatedLocally: function(store, typeKey, data) {
-      if (this.get('unresolvedLocalChanges') > 0) {
+      if (this.get('document.openSaveCount') == 0)
         store.push(typeKey, data);
-        this.decrementProperty('unresolvedLocalChanges');
-      }
     },
     recordUpdatedLocally: function(store, typeKey, data, e) {
-      if (this.get('unresolvedLocalChanges') > 0) {
+      if (this.get('document.openSaveCount') == 0)
         store.push(typeKey, data);
-        this.decrementProperty('unresolvedLocalChanges');
-      }
     },
     recordDeletedLocally: function(store, typeKey, id) {
-      if (this.get('unresolvedLocalChanges') > 0) {
+      if (this.get('document.openSaveCount') == 0) {
         var deletedRecord = store.getById(typeKey, id);
         store.unloadRecord(deletedRecord);
-        this.decrementProperty('unresolvedLocalChanges');
       }
     }
   },
@@ -72,9 +65,9 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
         id = record.get('id'),
         ref = this.get('ref');
 
-    this.beginSave();
+    this.beginSave('createRecord');
     ref.get(modelKey(type), id).set(serializedRecord);
-    this.endSave();
+    this.endSave('createRecord');
 
     this.observeRecordData(store, type.typeKey, id);
 
@@ -86,9 +79,9 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
         id = record.get('id'),
         ref = this.get('ref');
 
-    this.beginSave();
+    this.beginSave('updateRecord');
     ref.get(modelKey(type), id).set(serializedRecord);
-    this.endSave();
+    this.endSave('updateRecord');
 
     this.observeRecordData(store, type.typeKey, id);
 
@@ -123,12 +116,10 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
   },
 
   undo: function() {
-    this.incrementProperty('unresolvedLocalChanges');
     this.get('document').undo();
   },
 
   redo: function() {
-    this.incrementProperty('unresolvedLocalChanges');
     this.get('document').redo();
   },
 
@@ -136,8 +127,8 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
     this.get('document').beginSave(name);
   },
 
-  endSave: function() {
-    this.get('document').endSave();
+  endSave: function(name) {
+    this.get('document').endSave(name);
   }
 });
 

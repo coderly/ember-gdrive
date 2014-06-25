@@ -11,6 +11,13 @@ var recordKey = function(record) {
   return modelKey(record.constructor);
 };
 
+var pluck = function(values, property) {
+  return values.map(function(o) {
+    return o[property];
+  });
+};
+
 exports.normalizeTypeKey = normalizeTypeKey;
 exports.modelKey = modelKey;
 exports.recordKey = recordKey;
+exports.pluck = pluck;

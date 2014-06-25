@@ -1,5 +1,6 @@
 "use strict";
 var normalizeTypeKey = require("./util").normalizeTypeKey;
+var pluck = require("./util").pluck;
 
 exports["default"] = Ember.Object.extend(Ember.ActionHandler, {
   ref: null,
@@ -20,10 +21,11 @@ exports["default"] = Ember.Object.extend(Ember.ActionHandler, {
     }
 
     ref.get(normalizeTypeKey(typeKey), id).changed(function(e) {
-      if (e.type == 'object_changed')
+      if (e.type == 'value_changed') {
         Ember.run(function(){
           observer.recordDataChanged(store, typeKey, id, e);
         });
+      }
     });
   },
 
@@ -41,8 +43,9 @@ exports["default"] = Ember.Object.extend(Ember.ActionHandler, {
     }
 
     ref.get(normalizeTypeKey(typeKey)).materialize().changed(function(e) {
-      if (e.type == 'value_changed')
+      if (e.type == 'value_changed') {
         Ember.run.once(observer, 'identityMapChanged', store, typeKey, e);
+      }
     });
   },
 

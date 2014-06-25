@@ -8,8 +8,18 @@ DS.Store.reopen({
   beginSave: function(name) {
     this._defaultAdapter().beginSave(name);
   },
-  endSave: function() {
-    this._defaultAdapter().endSave();
+  endSave: function(name) {
+    this._defaultAdapter().endSave(name);
+  },
+  beginOperation: function(name) {
+    this._defaultAdapter().beginSave(name);
+    window.autoSaveSuspended = true;
+  },
+  endOperation: function(name) {
+    Ember.run.schedule('afterRender', this, function() {
+      this._defaultAdapter().endSave(name);
+      window.autoSaveSuspended = false;
+    });
   },
   _defaultAdapter: function() {
     return this.container.lookup('adapter:application');

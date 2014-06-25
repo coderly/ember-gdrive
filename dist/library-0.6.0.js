@@ -16,8 +16,6 @@ define("ember-gdrive/adapter",
       document: Ember.computed.alias('documentSource.document'),
       ref: Ember.computed.alias('document.ref'),
 
-      unresolvedLocalChanges: 0,
-
       _actions: {
         recordCreatedRemotely: function(store, typeKey, data) {
           store.push(typeKey, data);
@@ -31,22 +29,17 @@ define("ember-gdrive/adapter",
         },
 
         recordCreatedLocally: function(store, typeKey, data) {
-          if (this.get('unresolvedLocalChanges') > 0) {
+          if (this.get('document.openSaveCount') == 0)
             store.push(typeKey, data);
-            this.decrementProperty('unresolvedLocalChanges');
-          }
         },
         recordUpdatedLocally: function(store, typeKey, data, e) {
-          if (this.get('unresolvedLocalChanges') > 0) {
+          if (this.get('document.openSaveCount') == 0)
             store.push(typeKey, data);
-            this.decrementProperty('unresolvedLocalChanges');
-          }
         },
         recordDeletedLocally: function(store, typeKey, id) {
-          if (this.get('unresolvedLocalChanges') > 0) {
+          if (this.get('document.openSaveCount') == 0) {
             var deletedRecord = store.getById(typeKey, id);
             store.unloadRecord(deletedRecord);
-            this.decrementProperty('unresolvedLocalChanges');
           }
         }
       },
@@ -77,9 +70,9 @@ define("ember-gdrive/adapter",
             id = record.get('id'),
             ref = this.get('ref');
 
-        this.beginSave();
+        this.beginSave('createRecord');
         ref.get(modelKey(type), id).set(serializedRecord);
-        this.endSave();
+        this.endSave('createRecord');
 
         this.observeRecordData(store, type.typeKey, id);
 
@@ -91,9 +84,9 @@ define("ember-gdrive/adapter",
             id = record.get('id'),
             ref = this.get('ref');
 
-        this.beginSave();
+        this.beginSave('updateRecord');
         ref.get(modelKey(type), id).set(serializedRecord);
-        this.endSave();
+        this.endSave('updateRecord');
 
         this.observeRecordData(store, type.typeKey, id);
 
@@ -128,12 +121,10 @@ define("ember-gdrive/adapter",
       },
 
       undo: function() {
-        this.incrementProperty('unresolvedLocalChanges');
         this.get('document').undo();
       },
 
       redo: function() {
-        this.incrementProperty('unresolvedLocalChanges');
         this.get('document').redo();
       },
 
@@ -141,8 +132,8 @@ define("ember-gdrive/adapter",
         this.get('document').beginSave(name);
       },
 
-      endSave: function() {
-        this.get('document').endSave();
+      endSave: function(name) {
+        this.get('document').endSave(name);
       }
     });
 
@@ -285,6 +276,7 @@ define("ember-gdrive/change-observer",
   function(__dependency1__, __exports__) {
     "use strict";
     var normalizeTypeKey = __dependency1__.normalizeTypeKey;
+    var pluck = __dependency1__.pluck;
 
     __exports__["default"] = Ember.Object.extend(Ember.ActionHandler, {
       ref: null,
@@ -305,10 +297,11 @@ define("ember-gdrive/change-observer",
         }
 
         ref.get(normalizeTypeKey(typeKey), id).changed(function(e) {
-          if (e.type == 'object_changed')
+          if (e.type == 'value_changed') {
             Ember.run(function(){
               observer.recordDataChanged(store, typeKey, id, e);
             });
+          }
         });
       },
 
@@ -326,8 +319,9 @@ define("ember-gdrive/change-observer",
         }
 
         ref.get(normalizeTypeKey(typeKey)).materialize().changed(function(e) {
-          if (e.type == 'value_changed')
+          if (e.type == 'value_changed') {
             Ember.run.once(observer, 'identityMapChanged', store, typeKey, e);
+          }
         });
       },
 
@@ -486,14 +480,20 @@ define("ember-gdrive/document",
 
       meta: {},
 
+      openSaveCount: 0,
+
       /* undo/redo */
 
-      beginSave: function() {
+      beginSave: function(name) {
+        console.log('beginSave: ' + name);
         this.get('model').beginCompoundOperation();
+        this.incrementProperty('openSaveCount');
       },
 
-      endSave: function() {
+      endSave: function(name) {
+        console.log('endSave: ' + name);
         this.get('model').endCompoundOperation();
+        this.decrementProperty('openSaveCount');
       },
 
       undo: function() {
@@ -1016,8 +1016,18 @@ define("ember-gdrive/store-extensions",
       beginSave: function(name) {
         this._defaultAdapter().beginSave(name);
       },
-      endSave: function() {
-        this._defaultAdapter().endSave();
+      endSave: function(name) {
+        this._defaultAdapter().endSave(name);
+      },
+      beginOperation: function(name) {
+        this._defaultAdapter().beginSave(name);
+        window.autoSaveSuspended = true;
+      },
+      endOperation: function(name) {
+        Ember.run.schedule('afterRender', this, function() {
+          this._defaultAdapter().endSave(name);
+          window.autoSaveSuspended = false;
+        });
       },
       _defaultAdapter: function() {
         return this.container.lookup('adapter:application');
@@ -1063,9 +1073,16 @@ define("ember-gdrive/util",
       return modelKey(record.constructor);
     };
 
+    var pluck = function(values, property) {
+      return values.map(function(o) {
+        return o[property];
+      });
+    };
+
     __exports__.normalizeTypeKey = normalizeTypeKey;
     __exports__.modelKey = modelKey;
     __exports__.recordKey = recordKey;
+    __exports__.pluck = pluck;
   });
 define("ember-gdrive/uuid", 
   ["exports"],

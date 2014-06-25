@@ -10,4 +10,10 @@ var recordKey = function(record) {
   return modelKey(record.constructor);
 };
 
-export { normalizeTypeKey, modelKey, recordKey };
+var pluck = function(values, property) {
+  return values.map(function(o) {
+    return o[property];
+  });
+};
+
+export { normalizeTypeKey, modelKey, recordKey, pluck };
