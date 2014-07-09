@@ -39,13 +39,11 @@ var Document = Ember.Object.extend(Ember.Evented, {
   /* undo/redo */
 
   beginSave: function(name) {
-    console.log('beginSave: ' + name);
     this.get('model').beginCompoundOperation();
     this.incrementProperty('openSaveCount');
   },
 
   endSave: function(name) {
-    console.log('endSave: ' + name);
     this.get('model').endCompoundOperation();
     this.decrementProperty('openSaveCount');
   },
@@ -107,7 +105,7 @@ Document.reopenClass({
       );
     }).then(function(googleDocument) {
         return new Document(googleDocument, documentId);
-    }, function(e) {
+      }, function(e) {
         delete loadPromises[documentId]; // don't store error promises so they can be retried
 
         if(e.type == gapi.drive.realtime.ErrorType.TOKEN_REFRESH_REQUIRED) {
@@ -120,7 +118,7 @@ Document.reopenClass({
         else {
           throw new Error("Unknown error occured'")
         }
-    });
+      });
 
     return loadPromises[documentId];
   },

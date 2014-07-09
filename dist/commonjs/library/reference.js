@@ -128,14 +128,6 @@ MapReference.prototype.value = function() {
   return serialize(this.data);
 };
 
-MapReference.prototype.begin = function() {
-  return this.model.beginCompoundOperation();
-};
-
-MapReference.prototype.end = function() {
-  return this.model.endCompoundOperation();
-};
-
 var NullReference = function(model, parent, key) {
   this.model = model;
   this.parent = parent;

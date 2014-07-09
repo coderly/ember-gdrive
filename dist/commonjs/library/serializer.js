@@ -16,7 +16,7 @@ var Serializer = DS.JSONSerializer.extend({
 
   serializeHasMany: function(record, json, relationship) {
     var key = relationship.key,
-      relationshipType = DS.RelationshipChange.determineRelationshipType(record.constructor, relationship);
+        relationshipType = DS.RelationshipChange.determineRelationshipType(record.constructor, relationship);
 
     if (relationshipType === 'manyToNone' || relationshipType === 'manyToMany') {
       var serializeId = relationship.options.polymorphic ? serializeRecordPolymorphicId : serializeRecordId;

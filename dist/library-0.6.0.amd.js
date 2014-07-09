@@ -484,13 +484,11 @@ define("ember-gdrive/document",
       /* undo/redo */
 
       beginSave: function(name) {
-        console.log('beginSave: ' + name);
         this.get('model').beginCompoundOperation();
         this.incrementProperty('openSaveCount');
       },
 
       endSave: function(name) {
-        console.log('endSave: ' + name);
         this.get('model').endCompoundOperation();
         this.decrementProperty('openSaveCount');
       },
@@ -552,7 +550,7 @@ define("ember-gdrive/document",
           );
         }).then(function(googleDocument) {
             return new Document(googleDocument, documentId);
-        }, function(e) {
+          }, function(e) {
             delete loadPromises[documentId]; // don't store error promises so they can be retried
 
             if(e.type == gapi.drive.realtime.ErrorType.TOKEN_REFRESH_REQUIRED) {
@@ -565,7 +563,7 @@ define("ember-gdrive/document",
             else {
               throw new Error("Unknown error occured'")
             }
-        });
+          });
 
         return loadPromises[documentId];
       },
@@ -827,14 +825,6 @@ define("ember-gdrive/reference",
       return serialize(this.data);
     };
 
-    MapReference.prototype.begin = function() {
-      return this.model.beginCompoundOperation();
-    };
-
-    MapReference.prototype.end = function() {
-      return this.model.endCompoundOperation();
-    };
-
     var NullReference = function(model, parent, key) {
       this.model = model;
       this.parent = parent;
@@ -932,7 +922,7 @@ define("ember-gdrive/serializer",
 
       serializeHasMany: function(record, json, relationship) {
         var key = relationship.key,
-          relationshipType = DS.RelationshipChange.determineRelationshipType(record.constructor, relationship);
+            relationshipType = DS.RelationshipChange.determineRelationshipType(record.constructor, relationship);
 
         if (relationshipType === 'manyToNone' || relationshipType === 'manyToMany') {
           var serializeId = relationship.options.polymorphic ? serializeRecordPolymorphicId : serializeRecordId;
@@ -1087,37 +1077,9 @@ define("ember-gdrive/uuid",
   ["exports"],
   function(__exports__) {
     "use strict";
-    var PUSH_CHARS = "0123456789abcdefghijklmnopqrstuvwxyz";
-    var NUM_PUSH_CHARS = PUSH_CHARS.length;
-    var lastPushTime = 0;
-    var lastRandChars = [];
-
-    __exports__["default"] = function() {
-      var now = new Date();
-      var duplicateTime = now === lastPushTime;
-      lastPushTime = now;
-      var timeStampChars = new Array(8);
-
-      for(var i = 7; i >= 0; i--) {
-        timeStampChars[i] = PUSH_CHARS.charAt(now % NUM_PUSH_CHARS);
-        now = Math.floor(now / NUM_PUSH_CHARS);
-      }
-      var id = timeStampChars.join("");
-      
-      if(!duplicateTime) {
-        for(i = 0; i < 12; i++) {
-          lastRandChars[i] = Math.floor(Math.random() * NUM_PUSH_CHARS);
-        }
-      } else {
-        for(i = 11; i >= 0 && lastRandChars[i] === NUM_PUSH_CHARS - 1; i--) {
-          lastRandChars[i] = 0;
-        }
-        lastRandChars[i]++;
-      }
-      for(i = 0; i < 12; i++) {
-        id += PUSH_CHARS.charAt(lastRandChars[i]);
-      }
-      return id;
+    __exports__["default"] = function uuid() {
+      var n = 10; // max n is 16
+      return new Array(n+1).join((Math.random().toString(36)+'00000000000000000').slice(2, 18)).slice(0, n)
     }
   });
 define("ember-gdrive", 
