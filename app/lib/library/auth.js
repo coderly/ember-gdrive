@@ -19,11 +19,13 @@ Auth.reopenClass({
   permissions: [INSTALL_SCOPE, FILE_SCOPE, OPENID_SCOPE],
 
   authorize: function(options) {
-    var finalOptions = merge(options || {}, {
+    var finalOptions = merge({
       client_id: this.clientID,
       scope: this.permissions,
-      authuser: -1
-    });
+      authuser: -1,
+      immediate: false,
+      cookie_policy: 'single_host_origin'
+    }, options || {});
 
     return new Ember.RSVP.Promise(function(resolve, reject) {
       console.log('authorize', finalOptions);
@@ -54,6 +56,13 @@ Auth.reopenClass({
         }
       });
     }, 'GoogleDriveAuth _fetchUserObject');
+  },
+
+  close: function(){
+    return new Ember.RSVP.Promise(function(resolve){
+      gapi.auth.signOut();
+      resolve();
+    });
   }
 
 });

@@ -164,11 +164,13 @@ define("ember-gdrive/auth",
       permissions: [INSTALL_SCOPE, FILE_SCOPE, OPENID_SCOPE],
 
       authorize: function(options) {
-        var finalOptions = merge(options || {}, {
+        var finalOptions = merge({
           client_id: this.clientID,
           scope: this.permissions,
-          authuser: -1
-        });
+          authuser: -1,
+          immediate: false,
+          cookie_policy: 'single_host_origin'
+        }, options || {});
 
         return new Ember.RSVP.Promise(function(resolve, reject) {
           console.log('authorize', finalOptions);
@@ -199,6 +201,13 @@ define("ember-gdrive/auth",
             }
           });
         }, 'GoogleDriveAuth _fetchUserObject');
+      },
+
+      close: function(){
+        return new Ember.RSVP.Promise(function(resolve){
+          gapi.auth.signOut();
+          resolve();
+        });
       }
 
     });
@@ -529,6 +538,7 @@ define("ember-gdrive/document",
             return new Document(googleDocument, documentId);
           }, function(e) {
             delete loadPromises[documentId]; // don't store error promises so they can be retried
+              console.log('oh my, gonna make an error');
 
             if(e.type == gapi.drive.realtime.ErrorType.TOKEN_REFRESH_REQUIRED) {
               throw new Error('Token refresh required');

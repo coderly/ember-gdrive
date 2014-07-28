@@ -107,6 +107,7 @@ Document.reopenClass({
         return new Document(googleDocument, documentId);
       }, function(e) {
         delete loadPromises[documentId]; // don't store error promises so they can be retried
+          console.log('oh my, gonna make an error');
 
         if(e.type == gapi.drive.realtime.ErrorType.TOKEN_REFRESH_REQUIRED) {
           throw new Error('Token refresh required');
