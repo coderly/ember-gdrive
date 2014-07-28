@@ -150,7 +150,9 @@ define("ember-gdrive/auth",
       return Ember.merge(a || {}, b || {});
     };
 
-    var Auth = Ember.Object.extend({
+    var Auth = Ember.Object.extend();
+
+    Auth.reopenClass({
       isAuthenticated: false,
       isUnauthenticated: Ember.computed.not('isAuthenticated'),
 
@@ -160,26 +162,10 @@ define("ember-gdrive/auth",
       clientID: ENV.GOOGLE_CLIENT_ID,
       permissions: [INSTALL_SCOPE, FILE_SCOPE, OPENID_SCOPE],
 
-      login: function(options) {
-        var auth = this;
-
-        if (this.get('isAuthenticated')) {
-          return Ember.RSVP.resolve(this.get('user'));
-        }
-
-        return this.authorizeWithGoogle(options).then(function(result) {
-          auth.set('isAuthenticated', true);
-          return auth.fetchGoogleUserObject();
-        }).then(function(user) {
-          auth.set('user', user);
-          return user;
-        });
-      },
-
-      authorizeWithGoogle: function(options) {
+      authorize: function(options) {
         var finalOptions = merge(options || {}, {
-          client_id: this.get('clientID'),
-          scope: this.get('permissions'),
+          client_id: this.clientID,
+          scope: this.permissions,
           authuser: -1
         });
 
@@ -192,10 +178,16 @@ define("ember-gdrive/auth",
               Ember.run(null, reject, result && result.error ? result.error : 'unauthenticated');
             }
           });
-        }, 'ember-gdrive: Auth#authorizeWithGoogle');
+        }, 'ember-gdrive: Auth#authorize');
       },
 
-      fetchGoogleUserObject: function() {
+      authorizeImmediate: function(options) {
+        return this.authorize(merge({
+          immediate: true
+        }, options));
+      },
+
+      fetchCurrentUser: function() {
         return new Ember.RSVP.Promise(function(resolve, reject) {
           gapi.client.oauth2.userinfo.get().execute(function(user) {
             if (user.id) {
@@ -256,12 +248,13 @@ define("ember-gdrive/boot",
         }
       });
 
+      //@TODO: remove
       Application.initializer({
         name: "googleDriveAuth",
         before: "store",
 
         initialize: function(container, application) {
-          application.register('auth:google', GoogleDriveAuth);
+          application.register('auth:google', GoogleDriveAuth, {instantiate: false});
 
           application.inject('controller', 'auth', 'auth:google');
           application.inject('route', 'auth', 'auth:google');
@@ -368,73 +361,56 @@ define("ember-gdrive/change-observer",
     });
   });
 define("ember-gdrive/document-source", 
-  ["./document","./state","./loader","./local-cache","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
+  ["./document","./state","./loader","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
     var Document = __dependency1__["default"];
     var State = __dependency2__["default"];
     var loader = __dependency3__["default"];
-    var LocalCache = __dependency4__["default"];
 
     var DocumentSource = Ember.Object.extend({
       document: null,
       id: Ember.computed.alias('document.id'),
       isLoaded: Ember.computed.bool('id'),
 
-      authAndLoad: function(documentId) {
-        var documentSource = this;
-        return this.get('auth').login(this._authOptionsFor(documentId)).then(function(user) {
-          return documentSource._load(documentId);
-        });
-      },
+      state: function() {
+        return State.create();
+      }.property(),
 
-      openOrCreate: function(route) {
-        var state = State.create(),
-            auth = this.get('auth');
-
+      openFromState: function() {
+        var state = this.get('state');
         if (state.get('isOpen')) {
-          route.transitionTo('document', state.get('fileID'));
-        }
-        else if (state.get('isCreate')) {
-          return loader.load().then(function() {
-            return auth.login({immediate: true, user_id: state.get('userID')});
-          }).then(function() {
-            var title = prompt('Enter a document name') || 'Untitled document';
-            return Document.create({title: title});
-          }).then(function(document) {
-            return route.transitionTo('document', document.get('id'));
-          });
-        }
-      },
-
-      _authOptionsFor: function(documentId) {
-        var documentUserId = this.get('_documentUserCache').get(documentId);
-        if (documentUserId) {
-          return {immediate: true, user_id: documentUserId};
+          return this.load(state.get('fileID'));
         }
         else {
-          return {immediate: false};
+          return Ember.RSVP.Promise.reject('failed to open');
         }
       },
 
-      _load: function(documentId) {
-        Ember.assert('Document with id ' + this.get('id') + ' was already loaded', !this.get('isLoaded'));
+      createFromState: function() {
+        var state = this.get('state');
+        var title = prompt('Enter a document name') || 'Untitled document';
+        var documentSource = this;
 
-        var documentSource = this,
-            documentUserCache = this.get('_documentUserCache'),
-            auth = this.get('auth');
-
-        return Document.find( documentId ).then(function(doc) {
-          documentSource.set('document', doc);
-          documentUserCache.set(documentId, auth.get('user.id'));
-
-          return doc;
-        });
+        if (state.get('isCreate')) {
+          return Document.create({title: title}).then(function(doc) {
+            documentSource.set('document', doc);
+            return doc;
+          });
+        } else {
+          return Ember.RSVP.Promise.reject('failed to create');
+        }
       },
 
-      _documentUserCache: function() {
-        return new LocalCache('document:user');
-      }.property()
+      load: function(documentId) {
+        Ember.assert('Document with id ' + this.get('id') + ' was already loaded', !this.get('isLoaded'));
+
+        var documentSource = this;
+        return Document.find( documentId ).then(function(doc) {
+          documentSource.set('document', doc);
+          return doc;
+        });
+      }
 
     });
 
@@ -634,23 +610,9 @@ define("ember-gdrive/loader",
       return loader.promise;
     };
 
+    loader.load();
 
     __exports__["default"] = loader;
-  });
-define("ember-gdrive/local-cache", 
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-    var LocalCache = function(namespace) {
-      this.namespace = namespace;
-    };
-    LocalCache.prototype.get = function(id) {
-      return localStorage.getItem(this.namespace + ':' + id);
-    };
-    LocalCache.prototype.set = function(id, value) {
-      localStorage.setItem(this.namespace + ':' + id, value);
-    };
-    __exports__["default"] = LocalCache;
   });
 define("ember-gdrive/picker", 
   ["exports"],

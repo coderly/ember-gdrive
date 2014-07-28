@@ -38,12 +38,13 @@ Ember.onLoad('Ember.Application', function(Application) {
     }
   });
 
+  //@TODO: remove
   Application.initializer({
     name: "googleDriveAuth",
     before: "store",
 
     initialize: function(container, application) {
-      application.register('auth:google', GoogleDriveAuth);
+      application.register('auth:google', GoogleDriveAuth, {instantiate: false});
 
       application.inject('controller', 'auth', 'auth:google');
       application.inject('route', 'auth', 'auth:google');

@@ -37,5 +37,6 @@ loader.load = function() {
   return loader.promise;
 };
 
+loader.load();
 
 export default loader;
