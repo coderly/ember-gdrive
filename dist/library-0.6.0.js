@@ -344,9 +344,13 @@ define("ember-gdrive/change-observer",
 
       identityMapChanged: function(store, typeKey, e) {
         var ref = this.get('ref');
+        var data, newRecordId;
+
 
         if (e.isLocal && e.oldValue == null && e.newValue) {
-          this.send('recordCreatedLocally', store, typeKey, e.newValue.get('id'));
+          newRecordId = e.newValue.get('id');
+          data = ref.get(normalizeTypeKey(typeKey), newRecordId).value();
+          this.send('recordCreatedLocally', store, typeKey, data);
         }
 
         else if (e.isLocal && e.oldValue && e.newValue == null) {
@@ -354,8 +358,8 @@ define("ember-gdrive/change-observer",
         }
 
         else if (!e.isLocal && e.oldValue == null && e.newValue) {
-          var newRecordId = e.newValue.get('id'),
-              data = ref.get(normalizeTypeKey(typeKey), newRecordId).value();
+          newRecordId = e.newValue.get('id');
+          data = ref.get(normalizeTypeKey(typeKey), newRecordId).value();
 
           this.send('recordCreatedRemotely', store, typeKey, data);
         }
