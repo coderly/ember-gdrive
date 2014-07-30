@@ -7,7 +7,9 @@ var merge = function(a, b) {
   return Ember.merge(a || {}, b || {});
 };
 
-var Auth = Ember.Object.extend({
+var Auth = Ember.Object.extend();
+
+Auth.reopenClass({
   isAuthenticated: false,
   isUnauthenticated: Ember.computed.not('isAuthenticated'),
 
@@ -17,28 +19,14 @@ var Auth = Ember.Object.extend({
   clientID: ENV.GOOGLE_CLIENT_ID,
   permissions: [INSTALL_SCOPE, FILE_SCOPE, OPENID_SCOPE],
 
-  login: function(options) {
-    var auth = this;
-
-    if (this.get('isAuthenticated')) {
-      return Ember.RSVP.resolve(this.get('user'));
-    }
-
-    return this.authorizeWithGoogle(options).then(function(result) {
-      auth.set('isAuthenticated', true);
-      return auth.fetchGoogleUserObject();
-    }).then(function(user) {
-      auth.set('user', user);
-      return user;
-    });
-  },
-
-  authorizeWithGoogle: function(options) {
-    var finalOptions = merge(options || {}, {
-      client_id: this.get('clientID'),
-      scope: this.get('permissions'),
-      authuser: -1
-    });
+  authorize: function(options) {
+    var finalOptions = merge({
+      client_id: this.clientID,
+      scope: this.permissions,
+      authuser: -1,
+      immediate: false,
+      cookie_policy: 'single_host_origin'
+    }, options || {});
 
     return new Ember.RSVP.Promise(function(resolve, reject) {
       console.log('authorize', finalOptions);
@@ -49,10 +37,16 @@ var Auth = Ember.Object.extend({
           Ember.run(null, reject, result && result.error ? result.error : 'unauthenticated');
         }
       });
-    }, 'ember-gdrive: Auth#authorizeWithGoogle');
+    }, 'ember-gdrive: Auth#authorize');
   },
 
-  fetchGoogleUserObject: function() {
+  authorizeImmediate: function(options) {
+    return this.authorize(merge({
+      immediate: true
+    }, options));
+  },
+
+  fetchCurrentUser: function() {
     return new Ember.RSVP.Promise(function(resolve, reject) {
       gapi.client.oauth2.userinfo.get().execute(function(user) {
         if (user.id) {
@@ -63,6 +57,13 @@ var Auth = Ember.Object.extend({
         }
       });
     }, 'GoogleDriveAuth _fetchUserObject');
+  },
+
+  close: function(){
+    return new Ember.RSVP.Promise(function(resolve){
+      gapi.auth.signOut();
+      resolve();
+    });
   }
 
 });

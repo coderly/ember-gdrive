@@ -38,5 +38,6 @@ loader.load = function() {
   return loader.promise;
 };
 
+loader.load();
 
 exports["default"] = loader;
