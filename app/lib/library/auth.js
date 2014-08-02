@@ -23,8 +23,7 @@ Auth.reopenClass({
       client_id: this.clientID,
       scope: this.permissions,
       authuser: -1,
-      immediate: false,
-      cookie_policy: 'single_host_origin'
+      immediate: false
     }, options || {});
 
     return new Ember.RSVP.Promise(function(resolve, reject) {

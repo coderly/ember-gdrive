@@ -23,10 +23,11 @@ var DocumentSource = Ember.Object.extend({
 
   createFromState: function() {
     var state = this.get('state');
-    var title = prompt('Enter a document name') || 'Untitled document';
     var documentSource = this;
 
     if (state.get('isCreate')) {
+      var title = prompt('Enter a document name') || 'Untitled document';
+
       return Document.create({title: title}).then(function(doc) {
         documentSource.set('document', doc);
         return doc;

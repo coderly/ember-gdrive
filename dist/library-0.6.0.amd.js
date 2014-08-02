@@ -167,8 +167,7 @@ define("ember-gdrive/auth",
           client_id: this.clientID,
           scope: this.permissions,
           authuser: -1,
-          immediate: false,
-          cookie_policy: 'single_host_origin'
+          immediate: false
         }, options || {});
 
         return new Ember.RSVP.Promise(function(resolve, reject) {
@@ -402,10 +401,11 @@ define("ember-gdrive/document-source",
 
       createFromState: function() {
         var state = this.get('state');
-        var title = prompt('Enter a document name') || 'Untitled document';
         var documentSource = this;
 
         if (state.get('isCreate')) {
+          var title = prompt('Enter a document name') || 'Untitled document';
+
           return Document.create({title: title}).then(function(doc) {
             documentSource.set('document', doc);
             return doc;
