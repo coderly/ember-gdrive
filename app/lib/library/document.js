@@ -5,6 +5,7 @@ var Document = Ember.Object.extend(Ember.Evented, {
   content: null,
   title: Ember.computed.alias('meta.title'),
 
+
   init: function(googleDocument, documentId) {
     Ember.assert('You must pass in a valid google document.', !!googleDocument);
 

@@ -10,7 +10,14 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
 
   documentSource: null,
   document: Ember.computed.alias('documentSource.document'),
-  ref: Ember.computed.alias('document.ref'),
+  namespace: 'v1',
+
+  ref: function() {
+    var ref = this.get('document.ref'),
+        namespace = this.get('namespace');
+
+    return ref.get(namespace).materialize();
+  }.property('document.ref', 'namespace'),
 
   _actions: {
     recordCreatedRemotely: function(store, typeKey, data) {

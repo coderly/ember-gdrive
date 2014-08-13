@@ -14,7 +14,14 @@ define("ember-gdrive/adapter",
 
       documentSource: null,
       document: Ember.computed.alias('documentSource.document'),
-      ref: Ember.computed.alias('document.ref'),
+      namespace: 'v1',
+
+      ref: function() {
+        var ref = this.get('document.ref'),
+            namespace = this.get('namespace');
+
+        return ref.get(namespace).materialize();
+      }.property('document.ref', 'namespace'),
 
       _actions: {
         recordCreatedRemotely: function(store, typeKey, data) {
@@ -440,6 +447,7 @@ define("ember-gdrive/document",
       id: null,
       content: null,
       title: Ember.computed.alias('meta.title'),
+
 
       init: function(googleDocument, documentId) {
         Ember.assert('You must pass in a valid google document.', !!googleDocument);
