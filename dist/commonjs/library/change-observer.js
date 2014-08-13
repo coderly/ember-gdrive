@@ -75,10 +75,10 @@ exports["default"] = Ember.Object.extend(Ember.ActionHandler, {
     }
 
     if (e.isLocal) {
-      this.send('recordUpdatedLocally', store, typeKey, data);
+      this.get('target').recordUpdatedLocally(store, typeKey, data);
     }
     else {
-      this.send('recordUpdatedRemotely', store, typeKey, data);
+      this.get('target').recordUpdatedRemotely(store, typeKey, data);
     }
   },
 
@@ -92,23 +92,23 @@ exports["default"] = Ember.Object.extend(Ember.ActionHandler, {
     if (e.isLocal && e.oldValue == null && e.newValue) {
       newRecordId = e.newValue.get('id');
       data = ref.get(normalizeTypeKey(typeKey), newRecordId).value();
-      this.send('recordCreatedLocally', store, typeKey, data);
+      this.get('target').recordCreatedLocally(store, typeKey, data);
     }
 
     else if (e.isLocal && e.oldValue && e.newValue == null) {
-      this.send('recordDeletedLocally', store, typeKey, e.oldValue.get('id'));
+      this.get('target').recordDeletedLocally(store, typeKey, e.oldValue.get('id'));
     }
 
     else if (!e.isLocal && e.oldValue == null && e.newValue) {
       newRecordId = e.newValue.get('id');
       data = ref.get(normalizeTypeKey(typeKey), newRecordId).value();
 
-      this.send('recordCreatedRemotely', store, typeKey, data);
+      this.get('target').recordCreatedRemotely(store, typeKey, data);
     }
 
     else if (!e.isLocal && e.oldValue && e.newValue == null) {
       var deletedRecordId = e.oldValue.get('id');
-      this.send('recordDeletedRemotely', store, typeKey, deletedRecordId);
+      this.get('target').recordDeletedRemotely(store, typeKey, deletedRecordId);
     }
   }
 

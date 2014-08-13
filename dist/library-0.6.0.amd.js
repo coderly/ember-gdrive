@@ -8,7 +8,7 @@ define("ember-gdrive/adapter",
 
     var modelKey = __dependency4__.modelKey;
 
-    var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
+    var Adapter = DS.Adapter.extend({
       defaultSerializer: '-google-drive',
 
       documentSource: null,
@@ -22,29 +22,27 @@ define("ember-gdrive/adapter",
         return ref.get(namespace).materialize();
       }.property('document.ref', 'namespace'),
 
-      _actions: {
-        recordCreatedRemotely: function(store, typeKey, data) {
-          store.push(typeKey, data);
-        },
-        recordUpdatedRemotely: function(store, typeKey, data) {
-          store.push(typeKey, data);
-        },
-        recordDeletedRemotely: function(store, typeKey, id) {
-          var deletedRecord = store.getById(typeKey, id);
-          store.unloadRecord(deletedRecord);
-        },
+      recordCreatedRemotely: function(store, typeKey, data) {
+        store.push(typeKey, data);
+      },
+      recordUpdatedRemotely: function(store, typeKey, data) {
+        store.push(typeKey, data);
+      },
+      recordDeletedRemotely: function(store, typeKey, id) {
+        var deletedRecord = store.getById(typeKey, id);
+        store.unloadRecord(deletedRecord);
+      },
 
-        recordCreatedLocally: function(store, typeKey, data) {
-          store.push(typeKey, data);
-        },
-        recordUpdatedLocally: function(store, typeKey, data, e) {
-          store.push(typeKey, data);
-        },
-        recordDeletedLocally: function(store, typeKey, id) {
-          var deletedRecord = store.getById(typeKey, id);
-          if (deletedRecord && !deletedRecord.get('isDeleted')) {
-            deletedRecord.destroyRecord();
-          }
+      recordCreatedLocally: function(store, typeKey, data) {
+        store.push(typeKey, data);
+      },
+      recordUpdatedLocally: function(store, typeKey, data, e) {
+        store.push(typeKey, data);
+      },
+      recordDeletedLocally: function(store, typeKey, id) {
+        var deletedRecord = store.getById(typeKey, id);
+        if (deletedRecord && !deletedRecord.get('isDeleted')) {
+          deletedRecord.destroyRecord();
         }
       },
 
@@ -356,10 +354,10 @@ define("ember-gdrive/change-observer",
         }
 
         if (e.isLocal) {
-          this.send('recordUpdatedLocally', store, typeKey, data);
+          this.get('target').recordUpdatedLocally(store, typeKey, data);
         }
         else {
-          this.send('recordUpdatedRemotely', store, typeKey, data);
+          this.get('target').recordUpdatedRemotely(store, typeKey, data);
         }
       },
 
@@ -373,23 +371,23 @@ define("ember-gdrive/change-observer",
         if (e.isLocal && e.oldValue == null && e.newValue) {
           newRecordId = e.newValue.get('id');
           data = ref.get(normalizeTypeKey(typeKey), newRecordId).value();
-          this.send('recordCreatedLocally', store, typeKey, data);
+          this.get('target').recordCreatedLocally(store, typeKey, data);
         }
 
         else if (e.isLocal && e.oldValue && e.newValue == null) {
-          this.send('recordDeletedLocally', store, typeKey, e.oldValue.get('id'));
+          this.get('target').recordDeletedLocally(store, typeKey, e.oldValue.get('id'));
         }
 
         else if (!e.isLocal && e.oldValue == null && e.newValue) {
           newRecordId = e.newValue.get('id');
           data = ref.get(normalizeTypeKey(typeKey), newRecordId).value();
 
-          this.send('recordCreatedRemotely', store, typeKey, data);
+          this.get('target').recordCreatedRemotely(store, typeKey, data);
         }
 
         else if (!e.isLocal && e.oldValue && e.newValue == null) {
           var deletedRecordId = e.oldValue.get('id');
-          this.send('recordDeletedRemotely', store, typeKey, deletedRecordId);
+          this.get('target').recordDeletedRemotely(store, typeKey, deletedRecordId);
         }
       }
 

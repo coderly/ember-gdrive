@@ -5,7 +5,7 @@ var ChangeObserver = require("./change-observer")["default"];
 
 var modelKey = require("./util").modelKey;
 
-var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
+var Adapter = DS.Adapter.extend({
   defaultSerializer: '-google-drive',
 
   documentSource: null,
@@ -19,29 +19,27 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
     return ref.get(namespace).materialize();
   }.property('document.ref', 'namespace'),
 
-  _actions: {
-    recordCreatedRemotely: function(store, typeKey, data) {
-      store.push(typeKey, data);
-    },
-    recordUpdatedRemotely: function(store, typeKey, data) {
-      store.push(typeKey, data);
-    },
-    recordDeletedRemotely: function(store, typeKey, id) {
-      var deletedRecord = store.getById(typeKey, id);
-      store.unloadRecord(deletedRecord);
-    },
+  recordCreatedRemotely: function(store, typeKey, data) {
+    store.push(typeKey, data);
+  },
+  recordUpdatedRemotely: function(store, typeKey, data) {
+    store.push(typeKey, data);
+  },
+  recordDeletedRemotely: function(store, typeKey, id) {
+    var deletedRecord = store.getById(typeKey, id);
+    store.unloadRecord(deletedRecord);
+  },
 
-    recordCreatedLocally: function(store, typeKey, data) {
-      store.push(typeKey, data);
-    },
-    recordUpdatedLocally: function(store, typeKey, data, e) {
-      store.push(typeKey, data);
-    },
-    recordDeletedLocally: function(store, typeKey, id) {
-      var deletedRecord = store.getById(typeKey, id);
-      if (deletedRecord && !deletedRecord.get('isDeleted')) {
-        deletedRecord.destroyRecord();
-      }
+  recordCreatedLocally: function(store, typeKey, data) {
+    store.push(typeKey, data);
+  },
+  recordUpdatedLocally: function(store, typeKey, data, e) {
+    store.push(typeKey, data);
+  },
+  recordDeletedLocally: function(store, typeKey, id) {
+    var deletedRecord = store.getById(typeKey, id);
+    if (deletedRecord && !deletedRecord.get('isDeleted')) {
+      deletedRecord.destroyRecord();
     }
   },
 
