@@ -468,6 +468,11 @@ define("ember-gdrive/document",
         this.set('content', googleDocument);
         this.set('id', documentId);
 
+        googleDocument.addEventListener(gapi.drive.realtime.EventType.DOCUMENT_SAVE_STATE_CHANGED, function(e) {
+          console.log(e);
+          debugger;
+        });
+
         this._loadMeta();
       },
 

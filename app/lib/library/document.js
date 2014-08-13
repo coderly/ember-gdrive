@@ -12,6 +12,10 @@ var Document = Ember.Object.extend(Ember.Evented, {
     this.set('content', googleDocument);
     this.set('id', documentId);
 
+    googleDocument.addEventListener(gapi.drive.realtime.EventType.DOCUMENT_SAVE_STATE_CHANGED, function(e) {
+      // @TODO: add a save state property to the document (to prevent users from closing the browser early)
+    });
+
     this._loadMeta();
   },
 
@@ -78,7 +82,7 @@ var Document = Ember.Object.extend(Ember.Evented, {
           reject(googleFileMeta);
         }
         else {
-          resolve( googleFileMeta );
+          resolve(googleFileMeta);
         }
       });
     });

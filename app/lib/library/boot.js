@@ -22,8 +22,6 @@ Ember.onLoad('Ember.Application', function(Application) {
       application.inject('route', 'documentSource', 'document-source:main');
       application.inject('controller', 'documentSource', 'document-source:main');
       application.inject('adapter:application', 'documentSource', 'document-source:main');
-
-      application.inject('document-source:main', 'auth', 'auth:google');
     }
   });
 
