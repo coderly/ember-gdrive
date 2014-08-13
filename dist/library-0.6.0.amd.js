@@ -45,7 +45,9 @@ define("ember-gdrive/adapter",
         recordDeletedLocally: function(store, typeKey, id) {
           if (this.get('document.openSaveCount') == 0) {
             var deletedRecord = store.getById(typeKey, id);
-            store.unloadRecord(deletedRecord);
+            if (deletedRecord && !deletedRecord.get('isDeleted')) {
+              deletedRecord.destroyRecord();
+            }
           }
         }
       },
@@ -296,7 +298,7 @@ define("ember-gdrive/change-observer",
             key = [normalizeTypeKey(typeKey), id].join('/'),
             ref = this.get('ref');
 
-        if (this.contains(key)) {
+        if (observedMap[key]) {
           return Ember.RSVP.Promise.resolve();
         }
         else {
@@ -318,7 +320,7 @@ define("ember-gdrive/change-observer",
             key = [normalizeTypeKey(typeKey)].join('/'),
             ref = this.get('ref');
 
-        if (this.contains(key)) {
+        if (observedMap[key]) {
           return Ember.RSVP.Promise.resolve();
         }
         else {
@@ -332,19 +334,20 @@ define("ember-gdrive/change-observer",
         });
       },
 
-      contains: function(key) {
-        var observedMap = this.get('observedMap');
-        return observedMap[key];
-      },
-
       recordDataChanged: function(store, typeKey, id, e) {
         var ref = this.get('ref');
+        var data = ref.get(normalizeTypeKey(typeKey), id).value();
+
+        // if a record is getting deleted its attributes will all get set to null
+        // shouldn't be raising update events after a record gets deleted
+        if (!data) {
+          return;
+        }
+
         if (e.isLocal) {
-          var data = ref.get(normalizeTypeKey(typeKey), id).value();
           this.send('recordUpdatedLocally', store, typeKey, data);
         }
         else {
-          var data = ref.get(normalizeTypeKey(typeKey), id).value();
           this.send('recordUpdatedRemotely', store, typeKey, data);
         }
       },

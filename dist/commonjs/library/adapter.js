@@ -42,7 +42,9 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
     recordDeletedLocally: function(store, typeKey, id) {
       if (this.get('document.openSaveCount') == 0) {
         var deletedRecord = store.getById(typeKey, id);
-        store.unloadRecord(deletedRecord);
+        if (deletedRecord && !deletedRecord.get('isDeleted')) {
+          deletedRecord.destroyRecord();
+        }
       }
     }
   },
