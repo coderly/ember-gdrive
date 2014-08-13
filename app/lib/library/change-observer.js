@@ -1,6 +1,19 @@
 import { normalizeTypeKey } from './util';
 import { pluck } from './util';
 
+function logEvent(e) {
+  console.log({
+    type: e.type,
+    property: e.property,
+    oldValue: e.oldValue,
+    newValue: e.newValue,
+    isLocal: e.isLocal,
+    bubbles: e.bubbles,
+    sessionId: e.sessionId,
+    userId: e.userId
+  });
+}
+
 export default Ember.Object.extend(Ember.ActionHandler, {
   ref: null,
   target: null,
@@ -49,6 +62,8 @@ export default Ember.Object.extend(Ember.ActionHandler, {
   },
 
   recordDataChanged: function(store, typeKey, id, e) {
+    logEvent(e);
+
     var ref = this.get('ref');
     var data = ref.get(normalizeTypeKey(typeKey), id).value();
 
@@ -67,6 +82,8 @@ export default Ember.Object.extend(Ember.ActionHandler, {
   },
 
   identityMapChanged: function(store, typeKey, e) {
+    logEvent(e);
+
     var ref = this.get('ref');
     var data, newRecordId;
 

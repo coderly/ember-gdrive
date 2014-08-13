@@ -35,19 +35,15 @@ define("ember-gdrive/adapter",
         },
 
         recordCreatedLocally: function(store, typeKey, data) {
-          if (this.get('document.openSaveCount') == 0)
-            store.push(typeKey, data);
+          store.push(typeKey, data);
         },
         recordUpdatedLocally: function(store, typeKey, data, e) {
-          if (this.get('document.openSaveCount') == 0)
-            store.push(typeKey, data);
+          store.push(typeKey, data);
         },
         recordDeletedLocally: function(store, typeKey, id) {
-          if (this.get('document.openSaveCount') == 0) {
-            var deletedRecord = store.getById(typeKey, id);
-            if (deletedRecord && !deletedRecord.get('isDeleted')) {
-              deletedRecord.destroyRecord();
-            }
+          var deletedRecord = store.getById(typeKey, id);
+          if (deletedRecord && !deletedRecord.get('isDeleted')) {
+            deletedRecord.destroyRecord();
           }
         }
       },
@@ -287,6 +283,19 @@ define("ember-gdrive/change-observer",
     var normalizeTypeKey = __dependency1__.normalizeTypeKey;
     var pluck = __dependency1__.pluck;
 
+    function logEvent(e) {
+      console.log({
+        type: e.type,
+        property: e.property,
+        oldValue: e.oldValue,
+        newValue: e.newValue,
+        isLocal: e.isLocal,
+        bubbles: e.bubbles,
+        sessionId: e.sessionId,
+        userId: e.userId
+      });
+    }
+
     __exports__["default"] = Ember.Object.extend(Ember.ActionHandler, {
       ref: null,
       target: null,
@@ -335,6 +344,8 @@ define("ember-gdrive/change-observer",
       },
 
       recordDataChanged: function(store, typeKey, id, e) {
+        logEvent(e);
+
         var ref = this.get('ref');
         var data = ref.get(normalizeTypeKey(typeKey), id).value();
 
@@ -353,6 +364,8 @@ define("ember-gdrive/change-observer",
       },
 
       identityMapChanged: function(store, typeKey, e) {
+        logEvent(e);
+
         var ref = this.get('ref');
         var data, newRecordId;
 
@@ -479,18 +492,14 @@ define("ember-gdrive/document",
 
       meta: {},
 
-      openSaveCount: 0,
-
       /* undo/redo */
 
       beginSave: function(name) {
         this.get('model').beginCompoundOperation();
-        this.incrementProperty('openSaveCount');
       },
 
       endSave: function(name) {
         this.get('model').endCompoundOperation();
-        this.decrementProperty('openSaveCount');
       },
 
       undo: function() {
@@ -762,7 +771,7 @@ define("ember-gdrive/reference",
         this.data.set(arguments[0], this._coerce(arguments[1]));
       }
       else if (isPlainObject(value)) {
-        this.data.clear();
+
         var keys = Object.keys(value);
         for (var i = 0; i < keys.length; i++) {
           this.data.set( keys[i], value[keys[i]] );

@@ -78,7 +78,7 @@ MapReference.prototype.set = function(value) {
     this.data.set(arguments[0], this._coerce(arguments[1]));
   }
   else if (isPlainObject(value)) {
-    this.data.clear();
+
     var keys = Object.keys(value);
     for (var i = 0; i < keys.length; i++) {
       this.data.set( keys[i], value[keys[i]] );

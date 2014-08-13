@@ -32,19 +32,15 @@ var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
     },
 
     recordCreatedLocally: function(store, typeKey, data) {
-      if (this.get('document.openSaveCount') == 0)
-        store.push(typeKey, data);
+      store.push(typeKey, data);
     },
     recordUpdatedLocally: function(store, typeKey, data, e) {
-      if (this.get('document.openSaveCount') == 0)
-        store.push(typeKey, data);
+      store.push(typeKey, data);
     },
     recordDeletedLocally: function(store, typeKey, id) {
-      if (this.get('document.openSaveCount') == 0) {
-        var deletedRecord = store.getById(typeKey, id);
-        if (deletedRecord && !deletedRecord.get('isDeleted')) {
-          deletedRecord.destroyRecord();
-        }
+      var deletedRecord = store.getById(typeKey, id);
+      if (deletedRecord && !deletedRecord.get('isDeleted')) {
+        deletedRecord.destroyRecord();
       }
     }
   },

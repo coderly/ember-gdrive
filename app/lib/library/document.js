@@ -34,18 +34,14 @@ var Document = Ember.Object.extend(Ember.Evented, {
 
   meta: {},
 
-  openSaveCount: 0,
-
   /* undo/redo */
 
   beginSave: function(name) {
     this.get('model').beginCompoundOperation();
-    this.incrementProperty('openSaveCount');
   },
 
   endSave: function(name) {
     this.get('model').endCompoundOperation();
-    this.decrementProperty('openSaveCount');
   },
 
   undo: function() {
