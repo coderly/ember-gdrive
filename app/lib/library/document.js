@@ -5,6 +5,17 @@ var Document = Ember.Object.extend(Ember.Evented, {
   content: null,
   title: Ember.computed.alias('meta.title'),
 
+  hasUnsavedChanges: false,
+  isSaving: false,
+
+  canUndo: false,
+  canRedo: false,
+
+  collaborators: function() { return [] }.property(),
+
+  isSaved: function() {
+    return !this.get('hasUnsavedChanges') && !this.get('isSaving');
+  }.property('hasUnsavedChanges', 'isSaving'),
 
   init: function(googleDocument, documentId) {
     Ember.assert('You must pass in a valid google document.', !!googleDocument);
@@ -12,28 +23,21 @@ var Document = Ember.Object.extend(Ember.Evented, {
     this.set('content', googleDocument);
     this.set('id', documentId);
 
-    googleDocument.addEventListener(gapi.drive.realtime.EventType.DOCUMENT_SAVE_STATE_CHANGED, function(e) {
-      // @TODO: add a save state property to the document (to prevent users from closing the browser early)
-    });
+    this._observeSaveState();
+    this._observeUndoRedoState();
+    this._observeCollaborators();
+
+    this._refreshCollaborators();
 
     this._loadMeta();
   },
 
   ref: function() {
-    return new Reference(
-      this.get('model'),
-      null,
-      null,
-      this.get('root')
-    );
-  }.property('model', 'root').readOnly(),
+    var googleDocument = this.get('content');
+    var model = googleDocument.getModel();
+    var root = model.getRoot();
 
-  root: function() {
-    return this.get('model').getRoot();
-  }.property('model').readOnly(),
-
-  model: function() {
-    return this.get('content').getModel();
+    return new Reference(model, null, null, root);
   }.property('content').readOnly(),
 
   meta: {},
@@ -41,31 +45,65 @@ var Document = Ember.Object.extend(Ember.Evented, {
   /* undo/redo */
 
   beginSave: function(name) {
-    this.get('model').beginCompoundOperation();
+    this.get('content').getModel().beginCompoundOperation();
   },
 
   endSave: function(name) {
-    this.get('model').endCompoundOperation();
+    this.get('content').getModel().endCompoundOperation();
   },
 
   undo: function() {
-    if (this.canUndo()) {
-      this.get('model').undo();
+    if (this.get('canUndo')) {
+      this.get('content').getModel().undo();
     }
   },
 
   redo: function() {
-    if (this.canRedo()) {
-      this.get('model').redo();
+    if (this.get('canRedo')) {
+      this.get('content').getModel().redo();
     }
   },
 
-  canUndo: function() {
-    return this.get('model').canUndo;
+  _observeSaveState: function() {
+    var document = this;
+    var googleDocument = this.get('content');
+    googleDocument.addEventListener(gapi.drive.realtime.EventType.DOCUMENT_SAVE_STATE_CHANGED, function(e) {
+      document.set('hasUnsavedChanges', e.isPending);
+      document.set('isSaving', e.isSaving);
+      if (document.get('isSaved')) {
+        document.trigger('saved');
+      }
+    });
   },
 
-  canRedo: function() {
-    return this.get('model').canRedo;
+  _observeUndoRedoState: function() {
+    var document = this;
+    var googleDocument = this.get('content');
+    googleDocument.getModel().addEventListener(gapi.drive.realtime.EventType.UNDO_REDO_STATE_CHANGED, function(e) {
+      document.set('canUndo', e.canUndo);
+      document.set('canRedo', e.canRedo);
+    });
+  },
+
+  _observeCollaborators: function() {
+    var document = this;
+    var googleDocument = this.get('content');
+
+    googleDocument.addEventListener(gapi.drive.realtime.EventType.COLLABORATOR_JOINED, function(e) {
+      document._refreshCollaborators();
+    });
+
+    googleDocument.addEventListener(gapi.drive.realtime.EventType.COLLABORATOR_LEFT, function(e) {
+      document._refreshCollaborators();
+    });
+  },
+
+  _refreshCollaborators: function() {
+    var collaborators = this.get('collaborators');
+    var googleDocument = this.get('content');
+
+    collaborators.clear();
+    collaborators.pushObjects( googleDocument.getCollaborators() );
   },
 
   _loadMeta: function() {
@@ -107,7 +145,7 @@ Document.reopenClass({
         return new Document(googleDocument, documentId);
       }, function(e) {
         delete loadPromises[documentId]; // don't store error promises so they can be retried
-          console.log('oh my, gonna make an error');
+        console.log('oh my, gonna make an error');
 
         if(e.type == gapi.drive.realtime.ErrorType.TOKEN_REFRESH_REQUIRED) {
           throw new Error('Token refresh required');
