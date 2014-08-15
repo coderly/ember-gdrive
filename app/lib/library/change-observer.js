@@ -1,7 +1,7 @@
 import { normalizeTypeKey } from './util';
 import { pluck } from './util';
 
-function logEvent(e) {
+function logEventToConsole(e) {
   console.log({
     type: e.type,
     property: e.property,
@@ -13,6 +13,10 @@ function logEvent(e) {
     userId: e.userId
   });
 }
+
+function logEventToBlackHole(e) {}
+
+var logEvent = logEventToBlackHole;
 
 export default Ember.Object.extend(Ember.ActionHandler, {
   ref: null,
