@@ -1,18 +1,12 @@
-var assert = function(message, condition) {
-  if (!condition)
-    throw new Error("Assertion failed: " + message);
-};
+import Ember from 'ember';
 
 var isPlainObject = function(o) {
+  // This doesn't work for basic objects such as Object.create(null)
   return Object(o) === o && Object.getPrototypeOf(o) === Object.prototype;
 };
 
-var isArray = function(o) {
-  return o instanceof Array;
-};
-
 var get = function() {
-  if (isArray(arguments[0]))
+  if (Ember.isArray(arguments[0]))
     return get.apply(this, arguments[0]);
 
   var components = arguments;
@@ -34,6 +28,7 @@ MapReference.isFor = function(data) {
   return data instanceof gapi.drive.realtime.CollaborativeMap;
 };
 
+// this is used for debugging purposes to get a snapshot of the Google Drive data structure
 MapReference.serialize = function(object) {
   var serialized = {};
   object.items().forEach(function(pair) {
@@ -77,7 +72,7 @@ MapReference.prototype.set = function(value) {
     this.data.set(arguments[0], this._coerce(arguments[1]));
   }
   else if (isPlainObject(value)) {
-    this.data.clear();
+
     var keys = Object.keys(value);
     for (var i = 0; i < keys.length; i++) {
       this.data.set( keys[i], value[keys[i]] );
@@ -178,7 +173,7 @@ NullReference.prototype.materialize = function() {
 };
 
 NullReference.prototype.changed = function() {
-  assert('You must materialize a NullReference before adding a listener');
+  Ember.assert('You must materialize a NullReference before adding a listener', false);
 };
 
 var serializeList = function(object) {

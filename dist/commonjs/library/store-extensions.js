@@ -14,12 +14,10 @@ DS.Store.reopen({
   },
   beginOperation: function(name) {
     this._defaultAdapter().beginSave(name);
-    window.autoSaveSuspended = true;
   },
   endOperation: function(name) {
     Ember.run.schedule('afterRender', this, function() {
       this._defaultAdapter().endSave(name);
-      window.autoSaveSuspended = false;
     });
   },
   _defaultAdapter: function() {

@@ -9,38 +9,41 @@ define("ember-gdrive/adapter",
 
     var modelKey = __dependency4__.modelKey;
 
-    var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
+    var Adapter = DS.Adapter.extend({
       defaultSerializer: '-google-drive',
 
       documentSource: null,
       document: Ember.computed.alias('documentSource.document'),
-      ref: Ember.computed.alias('document.ref'),
+      namespace: 'v1',
 
-      _actions: {
-        recordCreatedRemotely: function(store, typeKey, data) {
-          store.push(typeKey, data);
-        },
-        recordUpdatedRemotely: function(store, typeKey, data) {
-          store.push(typeKey, data);
-        },
-        recordDeletedRemotely: function(store, typeKey, id) {
-          var deletedRecord = store.getById(typeKey, id);
-          store.unloadRecord(deletedRecord);
-        },
+      ref: function() {
+        var ref = this.get('document.ref'),
+            namespace = this.get('namespace');
 
-        recordCreatedLocally: function(store, typeKey, data) {
-          if (this.get('document.openSaveCount') == 0)
-            store.push(typeKey, data);
-        },
-        recordUpdatedLocally: function(store, typeKey, data, e) {
-          if (this.get('document.openSaveCount') == 0)
-            store.push(typeKey, data);
-        },
-        recordDeletedLocally: function(store, typeKey, id) {
-          if (this.get('document.openSaveCount') == 0) {
-            var deletedRecord = store.getById(typeKey, id);
-            store.unloadRecord(deletedRecord);
-          }
+        return ref.get(namespace).materialize();
+      }.property('document.ref', 'namespace'),
+
+      recordCreatedRemotely: function(store, typeKey, data) {
+        store.push(typeKey, data);
+      },
+      recordUpdatedRemotely: function(store, typeKey, data) {
+        store.push(typeKey, data);
+      },
+      recordDeletedRemotely: function(store, typeKey, id) {
+        var deletedRecord = store.getById(typeKey, id);
+        store.unloadRecord(deletedRecord);
+      },
+
+      recordCreatedLocally: function(store, typeKey, data) {
+        store.push(typeKey, data);
+      },
+      recordUpdatedLocally: function(store, typeKey, data, e) {
+        store.push(typeKey, data);
+      },
+      recordDeletedLocally: function(store, typeKey, id) {
+        var deletedRecord = store.getById(typeKey, id);
+        if (deletedRecord && !deletedRecord.get('isDeleted')) {
+          deletedRecord.destroyRecord();
         }
       },
 
@@ -241,8 +244,6 @@ define("ember-gdrive/boot",
           application.inject('route', 'documentSource', 'document-source:main');
           application.inject('controller', 'documentSource', 'document-source:main');
           application.inject('adapter:application', 'documentSource', 'document-source:main');
-
-          application.inject('document-source:main', 'auth', 'auth:google');
         }
       });
 
@@ -279,6 +280,19 @@ define("ember-gdrive/change-observer",
     var normalizeTypeKey = __dependency1__.normalizeTypeKey;
     var pluck = __dependency1__.pluck;
 
+    function logEvent(e) {
+      console.log({
+        type: e.type,
+        property: e.property,
+        oldValue: e.oldValue,
+        newValue: e.newValue,
+        isLocal: e.isLocal,
+        bubbles: e.bubbles,
+        sessionId: e.sessionId,
+        userId: e.userId
+      });
+    }
+
     __exports__["default"] = Ember.Object.extend(Ember.ActionHandler, {
       ref: null,
       target: null,
@@ -290,7 +304,7 @@ define("ember-gdrive/change-observer",
             key = [normalizeTypeKey(typeKey), id].join('/'),
             ref = this.get('ref');
 
-        if (this.contains(key)) {
+        if (observedMap[key]) {
           return Ember.RSVP.Promise.resolve();
         }
         else {
@@ -312,7 +326,7 @@ define("ember-gdrive/change-observer",
             key = [normalizeTypeKey(typeKey)].join('/'),
             ref = this.get('ref');
 
-        if (this.contains(key)) {
+        if (observedMap[key]) {
           return Ember.RSVP.Promise.resolve();
         }
         else {
@@ -326,24 +340,29 @@ define("ember-gdrive/change-observer",
         });
       },
 
-      contains: function(key) {
-        var observedMap = this.get('observedMap');
-        return observedMap[key];
-      },
-
       recordDataChanged: function(store, typeKey, id, e) {
+        logEvent(e);
+
         var ref = this.get('ref');
+        var data = ref.get(normalizeTypeKey(typeKey), id).value();
+
+        // if a record is getting deleted its attributes will all get set to null
+        // shouldn't be raising update events after a record gets deleted
+        if (!data) {
+          return;
+        }
+
         if (e.isLocal) {
-          var data = ref.get(normalizeTypeKey(typeKey), id).value();
-          this.send('recordUpdatedLocally', store, typeKey, data);
+          this.get('target').recordUpdatedLocally(store, typeKey, data);
         }
         else {
-          var data = ref.get(normalizeTypeKey(typeKey), id).value();
-          this.send('recordUpdatedRemotely', store, typeKey, data);
+          this.get('target').recordUpdatedRemotely(store, typeKey, data);
         }
       },
 
       identityMapChanged: function(store, typeKey, e) {
+        logEvent(e);
+
         var ref = this.get('ref');
         var data, newRecordId;
 
@@ -351,23 +370,23 @@ define("ember-gdrive/change-observer",
         if (e.isLocal && e.oldValue == null && e.newValue) {
           newRecordId = e.newValue.get('id');
           data = ref.get(normalizeTypeKey(typeKey), newRecordId).value();
-          this.send('recordCreatedLocally', store, typeKey, data);
+          this.get('target').recordCreatedLocally(store, typeKey, data);
         }
 
         else if (e.isLocal && e.oldValue && e.newValue == null) {
-          this.send('recordDeletedLocally', store, typeKey, e.oldValue.get('id'));
+          this.get('target').recordDeletedLocally(store, typeKey, e.oldValue.get('id'));
         }
 
         else if (!e.isLocal && e.oldValue == null && e.newValue) {
           newRecordId = e.newValue.get('id');
           data = ref.get(normalizeTypeKey(typeKey), newRecordId).value();
 
-          this.send('recordCreatedRemotely', store, typeKey, data);
+          this.get('target').recordCreatedRemotely(store, typeKey, data);
         }
 
         else if (!e.isLocal && e.oldValue && e.newValue == null) {
           var deletedRecordId = e.oldValue.get('id');
-          this.send('recordDeletedRemotely', store, typeKey, deletedRecordId);
+          this.get('target').recordDeletedRemotely(store, typeKey, deletedRecordId);
         }
       }
 
@@ -417,11 +436,13 @@ define("ember-gdrive/document-source",
       },
 
       load: function(documentId) {
+        console.log('loading ' + documentId);
         Ember.assert('Document with id ' + this.get('id') + ' was already loaded', !this.get('isLoaded'));
 
         var documentSource = this;
         return Document.find( documentId ).then(function(doc) {
           documentSource.set('document', doc);
+          console.log('loaded ' + documentId);
           return doc;
         });
       }
@@ -441,11 +462,16 @@ define("ember-gdrive/document",
       content: null,
       title: Ember.computed.alias('meta.title'),
 
+
       init: function(googleDocument, documentId) {
         Ember.assert('You must pass in a valid google document.', !!googleDocument);
 
         this.set('content', googleDocument);
         this.set('id', documentId);
+
+        googleDocument.addEventListener(gapi.drive.realtime.EventType.DOCUMENT_SAVE_STATE_CHANGED, function(e) {
+          // @TODO: add a save state property to the document (to prevent users from closing the browser early)
+        });
 
         this._loadMeta();
       },
@@ -469,18 +495,14 @@ define("ember-gdrive/document",
 
       meta: {},
 
-      openSaveCount: 0,
-
       /* undo/redo */
 
       beginSave: function(name) {
         this.get('model').beginCompoundOperation();
-        this.incrementProperty('openSaveCount');
       },
 
       endSave: function(name) {
         this.get('model').endCompoundOperation();
-        this.decrementProperty('openSaveCount');
       },
 
       undo: function() {
@@ -517,7 +539,7 @@ define("ember-gdrive/document",
               reject(googleFileMeta);
             }
             else {
-              resolve( googleFileMeta );
+              resolve(googleFileMeta);
             }
           });
         });
@@ -670,24 +692,18 @@ define("ember-gdrive/picker",
     });
   });
 define("ember-gdrive/reference", 
-  ["exports"],
-  function(__exports__) {
+  ["ember","exports"],
+  function(__dependency1__, __exports__) {
     "use strict";
-    var assert = function(message, condition) {
-      if (!condition)
-        throw new Error("Assertion failed: " + message);
-    };
+    var Ember = __dependency1__["default"];
 
     var isPlainObject = function(o) {
+      // This doesn't work for basic objects such as Object.create(null)
       return Object(o) === o && Object.getPrototypeOf(o) === Object.prototype;
     };
 
-    var isArray = function(o) {
-      return o instanceof Array;
-    };
-
     var get = function() {
-      if (isArray(arguments[0]))
+      if (Ember.isArray(arguments[0]))
         return get.apply(this, arguments[0]);
 
       var components = arguments;
@@ -709,6 +725,7 @@ define("ember-gdrive/reference",
       return data instanceof gapi.drive.realtime.CollaborativeMap;
     };
 
+    // this is used for debugging purposes to get a snapshot of the Google Drive data structure
     MapReference.serialize = function(object) {
       var serialized = {};
       object.items().forEach(function(pair) {
@@ -752,7 +769,7 @@ define("ember-gdrive/reference",
         this.data.set(arguments[0], this._coerce(arguments[1]));
       }
       else if (isPlainObject(value)) {
-        this.data.clear();
+
         var keys = Object.keys(value);
         for (var i = 0; i < keys.length; i++) {
           this.data.set( keys[i], value[keys[i]] );
@@ -853,7 +870,7 @@ define("ember-gdrive/reference",
     };
 
     NullReference.prototype.changed = function() {
-      assert('You must materialize a NullReference before adding a listener');
+      Ember.assert('You must materialize a NullReference before adding a listener', false);
     };
 
     var serializeList = function(object) {
@@ -884,35 +901,38 @@ define("ember-gdrive/serializer",
     "use strict";
     var recordKey = __dependency1__.recordKey;
 
-    var serializeRecordId = function(record) {
-      return record.get('id');
-    };
-
-    var serializeRecordPolymorphicId = function(record) {
-      return {
-        id: record.get('id'),
-        type: recordKey(record)
+    function serializeId(record, relationship) {
+      if (relationship.options.polymorphic) {
+        return {
+          id: record.get('id'),
+          type: recordKey(record)
+        }
       }
-    };
+      else {
+        return record.get('id');
+      }
+    }
 
     var Serializer = DS.JSONSerializer.extend({
 
       serializeHasMany: function(record, json, relationship) {
         var key = relationship.key;
-        var serializeId = relationship.options.polymorphic ? serializeRecordPolymorphicId : serializeRecordId;
         var rel = record.get(key);
         if(relationship.options.async){
           rel = rel.get('content');
         }
+
         if (rel){
-          json[key] = rel.map(serializeId);
+          json[key] = rel.map(function(record) {
+            return serializeId(record, relationship);
+          });
         }
       },
 
       serializeBelongsTo: function(record, json, relationship) {
         if (relationship.options && relationship.options.async){
           var key = relationship.key;
-          json[key] = record.get(relationship.key).get('content.id');
+          json[key] = serializeId(record.get(key).get('content'), relationship);
         } else {
           this._super(record, json, relationship);
         }
@@ -998,12 +1018,10 @@ define("ember-gdrive/store-extensions",
       },
       beginOperation: function(name) {
         this._defaultAdapter().beginSave(name);
-        window.autoSaveSuspended = true;
       },
       endOperation: function(name) {
         Ember.run.schedule('afterRender', this, function() {
           this._defaultAdapter().endSave(name);
-          window.autoSaveSuspended = false;
         });
       },
       _defaultAdapter: function() {

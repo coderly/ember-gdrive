@@ -4,38 +4,41 @@ import ChangeObserver from './change-observer';
 
 import { modelKey } from './util';
 
-var Adapter = DS.Adapter.extend(Ember.ActionHandler, {
+var Adapter = DS.Adapter.extend({
   defaultSerializer: '-google-drive',
 
   documentSource: null,
   document: Ember.computed.alias('documentSource.document'),
-  ref: Ember.computed.alias('document.ref'),
+  namespace: 'v1',
 
-  _actions: {
-    recordCreatedRemotely: function(store, typeKey, data) {
-      store.push(typeKey, data);
-    },
-    recordUpdatedRemotely: function(store, typeKey, data) {
-      store.push(typeKey, data);
-    },
-    recordDeletedRemotely: function(store, typeKey, id) {
-      var deletedRecord = store.getById(typeKey, id);
-      store.unloadRecord(deletedRecord);
-    },
+  ref: function() {
+    var ref = this.get('document.ref'),
+        namespace = this.get('namespace');
 
-    recordCreatedLocally: function(store, typeKey, data) {
-      if (this.get('document.openSaveCount') == 0)
-        store.push(typeKey, data);
-    },
-    recordUpdatedLocally: function(store, typeKey, data, e) {
-      if (this.get('document.openSaveCount') == 0)
-        store.push(typeKey, data);
-    },
-    recordDeletedLocally: function(store, typeKey, id) {
-      if (this.get('document.openSaveCount') == 0) {
-        var deletedRecord = store.getById(typeKey, id);
-        store.unloadRecord(deletedRecord);
-      }
+    return ref.get(namespace).materialize();
+  }.property('document.ref', 'namespace'),
+
+  recordCreatedRemotely: function(store, typeKey, data) {
+    store.push(typeKey, data);
+  },
+  recordUpdatedRemotely: function(store, typeKey, data) {
+    store.push(typeKey, data);
+  },
+  recordDeletedRemotely: function(store, typeKey, id) {
+    var deletedRecord = store.getById(typeKey, id);
+    store.unloadRecord(deletedRecord);
+  },
+
+  recordCreatedLocally: function(store, typeKey, data) {
+    store.push(typeKey, data);
+  },
+  recordUpdatedLocally: function(store, typeKey, data, e) {
+    store.push(typeKey, data);
+  },
+  recordDeletedLocally: function(store, typeKey, id) {
+    var deletedRecord = store.getById(typeKey, id);
+    if (deletedRecord && !deletedRecord.get('isDeleted')) {
+      deletedRecord.destroyRecord();
     }
   },
 

@@ -1,6 +1,19 @@
 import { normalizeTypeKey } from './util';
 import { pluck } from './util';
 
+function logEvent(e) {
+  console.log({
+    type: e.type,
+    property: e.property,
+    oldValue: e.oldValue,
+    newValue: e.newValue,
+    isLocal: e.isLocal,
+    bubbles: e.bubbles,
+    sessionId: e.sessionId,
+    userId: e.userId
+  });
+}
+
 export default Ember.Object.extend(Ember.ActionHandler, {
   ref: null,
   target: null,
@@ -12,7 +25,7 @@ export default Ember.Object.extend(Ember.ActionHandler, {
         key = [normalizeTypeKey(typeKey), id].join('/'),
         ref = this.get('ref');
 
-    if (this.contains(key)) {
+    if (observedMap[key]) {
       return Ember.RSVP.Promise.resolve();
     }
     else {
@@ -34,7 +47,7 @@ export default Ember.Object.extend(Ember.ActionHandler, {
         key = [normalizeTypeKey(typeKey)].join('/'),
         ref = this.get('ref');
 
-    if (this.contains(key)) {
+    if (observedMap[key]) {
       return Ember.RSVP.Promise.resolve();
     }
     else {
@@ -48,24 +61,29 @@ export default Ember.Object.extend(Ember.ActionHandler, {
     });
   },
 
-  contains: function(key) {
-    var observedMap = this.get('observedMap');
-    return observedMap[key];
-  },
-
   recordDataChanged: function(store, typeKey, id, e) {
+    logEvent(e);
+
     var ref = this.get('ref');
+    var data = ref.get(normalizeTypeKey(typeKey), id).value();
+
+    // if a record is getting deleted its attributes will all get set to null
+    // shouldn't be raising update events after a record gets deleted
+    if (!data) {
+      return;
+    }
+
     if (e.isLocal) {
-      var data = ref.get(normalizeTypeKey(typeKey), id).value();
-      this.send('recordUpdatedLocally', store, typeKey, data);
+      this.get('target').recordUpdatedLocally(store, typeKey, data);
     }
     else {
-      var data = ref.get(normalizeTypeKey(typeKey), id).value();
-      this.send('recordUpdatedRemotely', store, typeKey, data);
+      this.get('target').recordUpdatedRemotely(store, typeKey, data);
     }
   },
 
   identityMapChanged: function(store, typeKey, e) {
+    logEvent(e);
+
     var ref = this.get('ref');
     var data, newRecordId;
 
@@ -73,23 +91,23 @@ export default Ember.Object.extend(Ember.ActionHandler, {
     if (e.isLocal && e.oldValue == null && e.newValue) {
       newRecordId = e.newValue.get('id');
       data = ref.get(normalizeTypeKey(typeKey), newRecordId).value();
-      this.send('recordCreatedLocally', store, typeKey, data);
+      this.get('target').recordCreatedLocally(store, typeKey, data);
     }
 
     else if (e.isLocal && e.oldValue && e.newValue == null) {
-      this.send('recordDeletedLocally', store, typeKey, e.oldValue.get('id'));
+      this.get('target').recordDeletedLocally(store, typeKey, e.oldValue.get('id'));
     }
 
     else if (!e.isLocal && e.oldValue == null && e.newValue) {
       newRecordId = e.newValue.get('id');
       data = ref.get(normalizeTypeKey(typeKey), newRecordId).value();
 
-      this.send('recordCreatedRemotely', store, typeKey, data);
+      this.get('target').recordCreatedRemotely(store, typeKey, data);
     }
 
     else if (!e.isLocal && e.oldValue && e.newValue == null) {
       var deletedRecordId = e.oldValue.get('id');
-      this.send('recordDeletedRemotely', store, typeKey, deletedRecordId);
+      this.get('target').recordDeletedRemotely(store, typeKey, deletedRecordId);
     }
   }
 
