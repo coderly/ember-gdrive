@@ -243,8 +243,6 @@ define("ember-gdrive/boot",
           application.inject('route', 'documentSource', 'document-source:main');
           application.inject('controller', 'documentSource', 'document-source:main');
           application.inject('adapter:application', 'documentSource', 'document-source:main');
-
-          application.inject('document-source:main', 'auth', 'auth:google');
         }
       });
 
@@ -437,11 +435,13 @@ define("ember-gdrive/document-source",
       },
 
       load: function(documentId) {
+        console.log('loading ' + documentId);
         Ember.assert('Document with id ' + this.get('id') + ' was already loaded', !this.get('isLoaded'));
 
         var documentSource = this;
         return Document.find( documentId ).then(function(doc) {
           documentSource.set('document', doc);
+          console.log('loaded ' + documentId);
           return doc;
         });
       }
@@ -469,8 +469,7 @@ define("ember-gdrive/document",
         this.set('id', documentId);
 
         googleDocument.addEventListener(gapi.drive.realtime.EventType.DOCUMENT_SAVE_STATE_CHANGED, function(e) {
-          console.log(e);
-          debugger;
+          // @TODO: add a save state property to the document (to prevent users from closing the browser early)
         });
 
         this._loadMeta();
@@ -539,7 +538,7 @@ define("ember-gdrive/document",
               reject(googleFileMeta);
             }
             else {
-              resolve( googleFileMeta );
+              resolve(googleFileMeta);
             }
           });
         });
@@ -692,24 +691,18 @@ define("ember-gdrive/picker",
     });
   });
 define("ember-gdrive/reference", 
-  ["exports"],
-  function(__exports__) {
+  ["ember","exports"],
+  function(__dependency1__, __exports__) {
     "use strict";
-    var assert = function(message, condition) {
-      if (!condition)
-        throw new Error("Assertion failed: " + message);
-    };
+    var Ember = __dependency1__["default"];
 
     var isPlainObject = function(o) {
+      // This doesn't work for basic objects such as Object.create(null)
       return Object(o) === o && Object.getPrototypeOf(o) === Object.prototype;
     };
 
-    var isArray = function(o) {
-      return o instanceof Array;
-    };
-
     var get = function() {
-      if (isArray(arguments[0]))
+      if (Ember.isArray(arguments[0]))
         return get.apply(this, arguments[0]);
 
       var components = arguments;
@@ -731,6 +724,7 @@ define("ember-gdrive/reference",
       return data instanceof gapi.drive.realtime.CollaborativeMap;
     };
 
+    // this is used for debugging purposes to get a snapshot of the Google Drive data structure
     MapReference.serialize = function(object) {
       var serialized = {};
       object.items().forEach(function(pair) {
@@ -875,7 +869,7 @@ define("ember-gdrive/reference",
     };
 
     NullReference.prototype.changed = function() {
-      assert('You must materialize a NullReference before adding a listener');
+      Ember.assert('You must materialize a NullReference before adding a listener', false);
     };
 
     var serializeList = function(object) {
@@ -906,35 +900,38 @@ define("ember-gdrive/serializer",
     "use strict";
     var recordKey = __dependency1__.recordKey;
 
-    var serializeRecordId = function(record) {
-      return record.get('id');
-    };
-
-    var serializeRecordPolymorphicId = function(record) {
-      return {
-        id: record.get('id'),
-        type: recordKey(record)
+    function serializeId(record, relationship) {
+      if (relationship.options.polymorphic) {
+        return {
+          id: record.get('id'),
+          type: recordKey(record)
+        }
       }
-    };
+      else {
+        return record.get('id');
+      }
+    }
 
     var Serializer = DS.JSONSerializer.extend({
 
       serializeHasMany: function(record, json, relationship) {
         var key = relationship.key;
-        var serializeId = relationship.options.polymorphic ? serializeRecordPolymorphicId : serializeRecordId;
         var rel = record.get(key);
         if(relationship.options.async){
           rel = rel.get('content');
         }
+
         if (rel){
-          json[key] = rel.map(serializeId);
+          json[key] = rel.map(function(record) {
+            return serializeId(record, relationship);
+          });
         }
       },
 
       serializeBelongsTo: function(record, json, relationship) {
         if (relationship.options && relationship.options.async){
           var key = relationship.key;
-          json[key] = record.get(relationship.key).get('content.id');
+          json[key] = serializeId(record.get(key).get('content'), relationship);
         } else {
           this._super(record, json, relationship);
         }
@@ -1020,12 +1017,10 @@ define("ember-gdrive/store-extensions",
       },
       beginOperation: function(name) {
         this._defaultAdapter().beginSave(name);
-        window.autoSaveSuspended = true;
       },
       endOperation: function(name) {
         Ember.run.schedule('afterRender', this, function() {
           this._defaultAdapter().endSave(name);
-          window.autoSaveSuspended = false;
         });
       },
       _defaultAdapter: function() {
