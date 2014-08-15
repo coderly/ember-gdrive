@@ -5,7 +5,7 @@ var Document = Ember.Object.extend(Ember.Evented, {
   content: null,
   title: Ember.computed.alias('meta.title'),
 
-  isPending: false,
+  hasUnsavedChanges: false,
   isSaving: false,
 
   canUndo: false,
@@ -14,8 +14,8 @@ var Document = Ember.Object.extend(Ember.Evented, {
   collaborators: function() { return [] }.property(),
 
   isSaved: function() {
-    return !this.get('isPending') && !this.get('isSaving');
-  }.property('isPending', 'isSaving'),
+    return !this.get('hasUnsavedChanges') && !this.get('isSaving');
+  }.property('hasUnsavedChanges', 'isSaving'),
 
   init: function(googleDocument, documentId) {
     Ember.assert('You must pass in a valid google document.', !!googleDocument);
@@ -68,7 +68,7 @@ var Document = Ember.Object.extend(Ember.Evented, {
     var document = this;
     var googleDocument = this.get('content');
     googleDocument.addEventListener(gapi.drive.realtime.EventType.DOCUMENT_SAVE_STATE_CHANGED, function(e) {
-      document.set('isPending', e.isPending);
+      document.set('hasUnsavedChanges', e.isPending);
       document.set('isSaving', e.isSaving);
       if (document.get('isSaved')) {
         document.trigger('saved');
