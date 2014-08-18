@@ -463,7 +463,7 @@ define("ember-gdrive/document",
       content: null,
       title: Ember.computed.alias('meta.title'),
 
-      isPending: false,
+      hasUnsavedChanges: false,
       isSaving: false,
 
       canUndo: false,
@@ -472,8 +472,8 @@ define("ember-gdrive/document",
       collaborators: function() { return [] }.property(),
 
       isSaved: function() {
-        return !this.get('isPending') && !this.get('isSaving');
-      }.property('isPending', 'isSaving'),
+        return !this.get('hasUnsavedChanges') && !this.get('isSaving');
+      }.property('hasUnsavedChanges', 'isSaving'),
 
       init: function(googleDocument, documentId) {
         Ember.assert('You must pass in a valid google document.', !!googleDocument);
@@ -503,15 +503,11 @@ define("ember-gdrive/document",
       /* undo/redo */
 
       beginSave: function(name) {
-        console.log('beginSave? ' + name);
         this.get('content').getModel().beginCompoundOperation();
-        console.log('beginSave!' + name);
       },
 
       endSave: function(name) {
-        console.log('endSave? ' + name);
         this.get('content').getModel().endCompoundOperation();
-        console.log('endSave! ' + name);
       },
 
       undo: function() {
@@ -530,7 +526,7 @@ define("ember-gdrive/document",
         var document = this;
         var googleDocument = this.get('content');
         googleDocument.addEventListener(gapi.drive.realtime.EventType.DOCUMENT_SAVE_STATE_CHANGED, function(e) {
-          document.set('isPending', e.isPending);
+          document.set('hasUnsavedChanges', e.isPending);
           document.set('isSaving', e.isSaving);
           if (document.get('isSaved')) {
             document.trigger('saved');
@@ -809,13 +805,17 @@ define("ember-gdrive/reference",
 
     MapReference.prototype.set = function(value) {
       if (arguments.length > 1) {
-        this.data.set(arguments[0], this._coerce(arguments[1]));
+        if (arguments[1] !== undefined) {
+          this.data.set(arguments[0], this._coerce(arguments[1]));
+        }
       }
       else if (isPlainObject(value)) {
 
         var keys = Object.keys(value);
         for (var i = 0; i < keys.length; i++) {
-          this.data.set( keys[i], value[keys[i]] );
+          if (value[keys[i]] !== undefined) {
+            this.data.set( keys[i], value[keys[i]] );
+          }
         }
       }
       else {
@@ -961,7 +961,7 @@ define("ember-gdrive/serializer",
       serializeHasMany: function(record, json, relationship) {
         var key = relationship.key;
         var rel = record.get(key);
-        if(relationship.options.async){
+        if(relationship.options.async && rel.get('isFulfilled')){
           rel = rel.get('content');
         }
 
@@ -975,7 +975,9 @@ define("ember-gdrive/serializer",
       serializeBelongsTo: function(record, json, relationship) {
         if (relationship.options && relationship.options.async){
           var key = relationship.key;
-          json[key] = serializeId(record.get(key).get('content'), relationship);
+          if (record.get(key).get('isFulfilled')) {
+            json[key] = serializeId(record.get(key).get('content'), relationship);
+          }
         } else {
           this._super(record, json, relationship);
         }

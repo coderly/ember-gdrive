@@ -18,7 +18,7 @@ var Serializer = DS.JSONSerializer.extend({
   serializeHasMany: function(record, json, relationship) {
     var key = relationship.key;
     var rel = record.get(key);
-    if(relationship.options.async){
+    if(relationship.options.async && rel.get('isFulfilled')){
       rel = rel.get('content');
     }
 
@@ -32,7 +32,9 @@ var Serializer = DS.JSONSerializer.extend({
   serializeBelongsTo: function(record, json, relationship) {
     if (relationship.options && relationship.options.async){
       var key = relationship.key;
-      json[key] = serializeId(record.get(key).get('content'), relationship);
+      if (record.get(key).get('isFulfilled')) {
+        json[key] = serializeId(record.get(key).get('content'), relationship);
+      }
     } else {
       this._super(record, json, relationship);
     }

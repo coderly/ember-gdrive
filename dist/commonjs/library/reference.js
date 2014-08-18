@@ -70,13 +70,17 @@ MapReference.prototype._get = function(key) {
 
 MapReference.prototype.set = function(value) {
   if (arguments.length > 1) {
-    this.data.set(arguments[0], this._coerce(arguments[1]));
+    if (arguments[1] !== undefined) {
+      this.data.set(arguments[0], this._coerce(arguments[1]));
+    }
   }
   else if (isPlainObject(value)) {
 
     var keys = Object.keys(value);
     for (var i = 0; i < keys.length; i++) {
-      this.data.set( keys[i], value[keys[i]] );
+      if (value[keys[i]] !== undefined) {
+        this.data.set( keys[i], value[keys[i]] );
+      }
     }
   }
   else {
