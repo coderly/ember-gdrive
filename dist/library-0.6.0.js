@@ -962,11 +962,17 @@ define("ember-gdrive/serializer",
       serializeHasMany: function(record, json, relationship) {
         var key = relationship.key;
         var rel = record.get(key);
-        if(relationship.options.async && rel.get('isFulfilled')){
+        var shouldSerialize = true;
+
+        if(relationship.options.async && rel && !rel.get('isFulfilled')) {
+          shouldSerialize = false;
+        }
+
+         if(relationship.options.async && rel && rel.get('isFulfilled')){
           rel = rel.get('content');
         }
 
-        if (rel){
+        if (rel && shouldSerialize){
           json[key] = rel.map(function(record) {
             return serializeId(record, relationship);
           });
