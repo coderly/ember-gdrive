@@ -914,7 +914,7 @@ define("ember-gdrive/reference",
     };
 
     NullReference.prototype.changed = function() {
-      Ember.assert('You must materialize a NullReference before adding a listener', false);
+      Ember.assert('You must materialize a NullReference before adding a listener to ' + this.path(), false);
     };
 
     var serializeList = function(object) {
@@ -946,6 +946,9 @@ define("ember-gdrive/serializer",
     var recordKey = __dependency1__.recordKey;
 
     function serializeId(record, relationship) {
+      if (!record) {
+        return null;
+      }
       if (relationship.options.polymorphic) {
         return {
           id: record.get('id'),
@@ -960,19 +963,18 @@ define("ember-gdrive/serializer",
     var Serializer = DS.JSONSerializer.extend({
 
       serializeHasMany: function(record, json, relationship) {
+        if(relationship.options.serialize === false) {
+          return;
+        }
         var key = relationship.key;
         var rel = record.get(key);
-        var shouldSerialize = true;
 
-        if(relationship.options.async && rel && !rel.get('isFulfilled')) {
-          shouldSerialize = false;
+        if(relationship.options.async && rel){
+          rel = record._relationships[key].manyArray.toArray()
+
         }
 
-         if(relationship.options.async && rel && rel.get('isFulfilled')){
-          rel = rel.get('content');
-        }
-
-        if (rel && shouldSerialize){
+        if (rel){
           json[key] = rel.map(function(record) {
             return serializeId(record, relationship);
           });
@@ -980,11 +982,13 @@ define("ember-gdrive/serializer",
       },
 
       serializeBelongsTo: function(record, json, relationship) {
+        if(relationship.options.serialize === false) {
+          return;
+        }
         if (relationship.options && relationship.options.async){
           var key = relationship.key;
-          if (record.get(key).get('isFulfilled')) {
-            json[key] = serializeId(record.get(key).get('content'), relationship);
-          }
+          var belongsTo = record._relationships[key].inverseRecord;
+          json[key] = serializeId(belongsTo, relationship);
         } else {
           this._super(record, json, relationship);
         }

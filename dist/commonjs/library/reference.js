@@ -178,7 +178,7 @@ NullReference.prototype.materialize = function() {
 };
 
 NullReference.prototype.changed = function() {
-  Ember.assert('You must materialize a NullReference before adding a listener', false);
+  Ember.assert('You must materialize a NullReference before adding a listener to ' + this.path(), false);
 };
 
 var serializeList = function(object) {

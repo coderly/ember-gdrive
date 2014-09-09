@@ -2,6 +2,9 @@
 var recordKey = require("./util").recordKey;
 
 function serializeId(record, relationship) {
+  if (!record) {
+    return null;
+  }
   if (relationship.options.polymorphic) {
     return {
       id: record.get('id'),
@@ -16,19 +19,18 @@ function serializeId(record, relationship) {
 var Serializer = DS.JSONSerializer.extend({
 
   serializeHasMany: function(record, json, relationship) {
+    if(relationship.options.serialize === false) {
+      return;
+    }
     var key = relationship.key;
     var rel = record.get(key);
-    var shouldSerialize = true;
 
-    if(relationship.options.async && rel && !rel.get('isFulfilled')) {
-      shouldSerialize = false;
+    if(relationship.options.async && rel){
+      rel = record._relationships[key].manyArray.toArray()
+
     }
 
-     if(relationship.options.async && rel && rel.get('isFulfilled')){
-      rel = rel.get('content');
-    }
-
-    if (rel && shouldSerialize){
+    if (rel){
       json[key] = rel.map(function(record) {
         return serializeId(record, relationship);
       });
@@ -36,11 +38,13 @@ var Serializer = DS.JSONSerializer.extend({
   },
 
   serializeBelongsTo: function(record, json, relationship) {
+    if(relationship.options.serialize === false) {
+      return;
+    }
     if (relationship.options && relationship.options.async){
       var key = relationship.key;
-      if (record.get(key).get('isFulfilled')) {
-        json[key] = serializeId(record.get(key).get('content'), relationship);
-      }
+      var belongsTo = record._relationships[key].inverseRecord;
+      json[key] = serializeId(belongsTo, relationship);
     } else {
       this._super(record, json, relationship);
     }
