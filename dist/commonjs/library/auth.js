@@ -27,6 +27,8 @@ Auth.reopenClass({
       immediate: false
     }, options || {});
 
+    Ember.assert('GOOGLE_CLIENT_ID was not set', finalOptions.client_id);
+
     return new Ember.RSVP.Promise(function(resolve, reject) {
       console.log('authorize', finalOptions);
       gapi.auth.authorize(finalOptions, function(result) {

@@ -27,7 +27,6 @@ var Serializer = DS.JSONSerializer.extend({
 
     if(relationship.options.async && rel){
       rel = record._relationships[key].manyArray.toArray()
-
     }
 
     if (rel){

@@ -173,6 +173,8 @@ define("ember-gdrive/auth",
           immediate: false
         }, options || {});
 
+        Ember.assert('GOOGLE_CLIENT_ID was not set', finalOptions.client_id);
+
         return new Ember.RSVP.Promise(function(resolve, reject) {
           console.log('authorize', finalOptions);
           gapi.auth.authorize(finalOptions, function(result) {
@@ -970,7 +972,6 @@ define("ember-gdrive/serializer",
 
         if(relationship.options.async && rel){
           rel = record._relationships[key].manyArray.toArray()
-
         }
 
         if (rel){

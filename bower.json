@@ -5,7 +5,7 @@
   "main": ["./dist/library-0.6.0.js"],
   "dependencies": {
     "ember": ">=1.4.0 < 2.0.0",
-    "ember-data": "canary"
+    "ember-data": "2c74207"
   },
   "keywords": [
     "Google Drive",
