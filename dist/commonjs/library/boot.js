@@ -1,10 +1,15 @@
 "use strict";
 var GoogleDriveAuth = require("ember-gdrive/auth")["default"];
+
 var DocumentSource = require("ember-gdrive/document-source")["default"];
+
 var loader = require("ember-gdrive/loader")["default"];
 
+
 var GoogleDriveAdapter = require("ember-gdrive/adapter")["default"];
+
 var GoogleDriveSerializer = require("ember-gdrive/serializer")["default"];
+
 
 /**
  Register the serializer and adapter

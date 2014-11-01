@@ -1,7 +1,10 @@
 "use strict";
 var Document = require("./document")["default"];
+
 var State = require("./state")["default"];
+
 var loader = require("./loader")["default"];
+
 
 var DocumentSource = Ember.Object.extend({
   document: null,

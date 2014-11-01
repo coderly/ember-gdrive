@@ -1,9 +1,13 @@
 "use strict";
 var uuid = require("./uuid")["default"];
+
 var Document = require("./document")["default"];
+
 var ChangeObserver = require("./change-observer")["default"];
 
+
 var modelKey = require("./util").modelKey;
+
 
 var Adapter = DS.Adapter.extend({
   defaultSerializer: '-google-drive',
