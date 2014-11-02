@@ -2,6 +2,7 @@
 var extractQueryParams = require("./uri").extractQueryParams;
 var clearQueryString = require("./uri").clearQueryString;
 
+
 exports["default"] = Ember.Object.extend({
 
   init: function() {

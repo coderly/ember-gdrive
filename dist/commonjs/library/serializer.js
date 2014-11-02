@@ -1,6 +1,7 @@
 "use strict";
 var recordKey = require("./util").recordKey;
 
+
 function serializeId(record, relationship) {
   if (!record) {
     return null;

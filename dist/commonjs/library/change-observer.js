@@ -1,6 +1,8 @@
 "use strict";
 var normalizeTypeKey = require("./util").normalizeTypeKey;
+
 var pluck = require("./util").pluck;
+
 
 function logEventToConsole(e) {
   console.log({

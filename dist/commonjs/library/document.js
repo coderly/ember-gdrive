@@ -1,6 +1,7 @@
 "use strict";
 var Reference = require("./reference")["default"];
 
+
 var Document = Ember.Object.extend(Ember.Evented, {
   id: null,
   content: null,
