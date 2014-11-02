@@ -762,11 +762,9 @@ define("ember-gdrive/reference",
     
     var isCollaborativeList = function (object) {
       return object &&
-        object.hasOwnProperty('removeRange') &&
-        object.hasOwnProperty('replaceRange') &&
-        object.hasOwnProperty('removeValue') &&
-        object.hasOwnProperty('registerReference') &&
-        object.hasOwnProperty('move');
+        object.hasOwnProperty('insertAll') &&
+        object.hasOwnProperty('pushAll') &&
+        object.hasOwnProperty('removeRange');
     };
     
     var get = function () {
@@ -791,9 +789,7 @@ define("ember-gdrive/reference",
     MapReference.isFor = function (data) {
       //return data instanceof gapi.drive.realtime.CollaborativeMap;
       return data &&
-        data.hasOwnProperty('has') &&
         data.hasOwnProperty('size') &&
-        data.hasOwnProperty('items') &&
         data.hasOwnProperty('keys') &&
         data.hasOwnProperty('values');
     };
@@ -955,7 +951,6 @@ define("ember-gdrive/reference",
     var serialize = function (object) {
       if (MapReference.isFor(object)) {
         return MapReference.serialize(object);
-        /*} else if (object instanceof gapi.drive.realtime.CollaborativeList) {*/
       } else if (isCollaborativeList(object)) {
         return serializeList(object);
       } else {

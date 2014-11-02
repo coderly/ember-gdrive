@@ -7,11 +7,9 @@ var isPlainObject = function (o) {
 
 var isCollaborativeList = function (object) {
   return object &&
-    object.hasOwnProperty('removeRange') &&
-    object.hasOwnProperty('replaceRange') &&
-    object.hasOwnProperty('removeValue') &&
-    object.hasOwnProperty('registerReference') &&
-    object.hasOwnProperty('move');
+    object.hasOwnProperty('insertAll') &&
+    object.hasOwnProperty('pushAll') &&
+    object.hasOwnProperty('removeRange');
 };
 
 var get = function () {
@@ -36,9 +34,7 @@ var MapReference = function (model, parent, key, data) {
 MapReference.isFor = function (data) {
   //return data instanceof gapi.drive.realtime.CollaborativeMap;
   return data &&
-    data.hasOwnProperty('has') &&
     data.hasOwnProperty('size') &&
-    data.hasOwnProperty('items') &&
     data.hasOwnProperty('keys') &&
     data.hasOwnProperty('values');
 };
@@ -200,7 +196,6 @@ var serializeList = function (object) {
 var serialize = function (object) {
   if (MapReference.isFor(object)) {
     return MapReference.serialize(object);
-    /*} else if (object instanceof gapi.drive.realtime.CollaborativeList) {*/
   } else if (isCollaborativeList(object)) {
     return serializeList(object);
   } else {
@@ -208,5 +203,4 @@ var serialize = function (object) {
   }
 };
 
-export
-default MapReference;
+export default MapReference;
