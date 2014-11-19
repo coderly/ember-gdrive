@@ -146,12 +146,15 @@ define("ember-gdrive/adapter",
     __exports__["default"] = Adapter;
   });
 define("ember-gdrive/auth", 
-  ["exports"],
-  function(__exports__) {
+  ["ember-gdrive/loader","exports"],
+  function(__dependency1__, __exports__) {
     "use strict";
     var INSTALL_SCOPE = 'https://www.googleapis.com/auth/drive.install',
         FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file',
         OPENID_SCOPE = 'openid';
+    
+    var loader = __dependency1__["default"];
+
     
     var merge = function(a, b) {
       return Ember.merge(a || {}, b || {});
@@ -181,12 +184,14 @@ define("ember-gdrive/auth",
     
         return new Ember.RSVP.Promise(function(resolve, reject) {
           console.log('authorize', finalOptions);
-          gapi.auth.authorize(finalOptions, function(result) {
-            if (result && !result.error) {
-              Ember.run(null, resolve, result);
-            } else {
-              Ember.run(null, reject, result && result.error ? result.error : 'unauthenticated');
-            }
+          loader.load().then(function () {
+            gapi.auth.authorize(finalOptions, function (result) {
+              if (result && !result.error) {
+                Ember.run(null, resolve, result);
+              } else {
+                Ember.run(null, reject, result && result.error ? result.error : 'unauthenticated');
+              }
+            });
           });
         }, 'ember-gdrive: Auth#authorize');
       },
@@ -271,8 +276,7 @@ define("ember-gdrive/boot",
       //@TODO: remove
       Application.initializer({
         name: "googleDriveAuth",
-        before: "store",
-    
+        before: ["store", "simple-auth"],
         initialize: function(container, application) {
           application.register('auth:google', GoogleDriveAuth, {instantiate: false});
     

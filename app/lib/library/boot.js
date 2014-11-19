@@ -39,8 +39,7 @@ Ember.onLoad('Ember.Application', function(Application) {
   //@TODO: remove
   Application.initializer({
     name: "googleDriveAuth",
-    before: "store",
-
+    before: ["store", "simple-auth"],
     initialize: function(container, application) {
       application.register('auth:google', GoogleDriveAuth, {instantiate: false});
 

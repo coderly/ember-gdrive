@@ -3,6 +3,9 @@ var INSTALL_SCOPE = 'https://www.googleapis.com/auth/drive.install',
     FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file',
     OPENID_SCOPE = 'openid';
 
+var loader = require("ember-gdrive/loader")["default"];
+
+
 var merge = function(a, b) {
   return Ember.merge(a || {}, b || {});
 };
@@ -31,12 +34,14 @@ Auth.reopenClass({
 
     return new Ember.RSVP.Promise(function(resolve, reject) {
       console.log('authorize', finalOptions);
-      gapi.auth.authorize(finalOptions, function(result) {
-        if (result && !result.error) {
-          Ember.run(null, resolve, result);
-        } else {
-          Ember.run(null, reject, result && result.error ? result.error : 'unauthenticated');
-        }
+      loader.load().then(function () {
+        gapi.auth.authorize(finalOptions, function (result) {
+          if (result && !result.error) {
+            Ember.run(null, resolve, result);
+          } else {
+            Ember.run(null, reject, result && result.error ? result.error : 'unauthenticated');
+          }
+        });
       });
     }, 'ember-gdrive: Auth#authorize');
   },
