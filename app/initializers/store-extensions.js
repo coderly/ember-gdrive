@@ -3,7 +3,7 @@ import DS from 'ember-data';
 
 export default {
   name: 'store-extensions',
-  after: 'store',
+  before: 'store',
   initialize: function () {
     DS.Store.reopen({
       undo: function () {
