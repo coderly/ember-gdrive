@@ -14,7 +14,7 @@ module.exports = function(grunt) {
     var testFiles = grunt.file.expand('test/tests/**/*_test.js');
 
     this.files.forEach(function(f) {
-      var output = ["(function(globals) {"];
+      var output = ['(function(globals) {'];
 
       output.push.apply(output, f.src.map(grunt.file.read));
 

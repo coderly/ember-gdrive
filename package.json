@@ -28,5 +28,7 @@
   "dependencies": {},
   "main": "dist/commonjs/main.js",
   "keywords": [ "ember-addon"],
-  "ember-addon-main": "lib/ember-addon-main.js"
+  "ember-addon": {
+    "configPath": "tests/dummy/config"
+  }
 }
