@@ -1,4 +1,4 @@
-import GoogleDriveAuth from 'ember-gdrive/authenticators/auth';
+import GoogleDriveAuth from 'ember-gdrive/lib/auth';
 
 export default {
   name: 'google-drive-auth',
