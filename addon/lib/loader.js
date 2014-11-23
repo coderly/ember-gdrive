@@ -50,5 +50,4 @@ loader.load = function () {
 
 loader.load();
 
-export
-default loader;
+export default loader;
