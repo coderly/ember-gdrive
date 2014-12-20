@@ -9,21 +9,16 @@ var merge = function(a, b) {
   return Ember.merge(a || {}, b || {});
 };
 
-var Auth = Ember.Object.extend();
-
-Auth.reopenClass({
+var Auth = Ember.Object.extend({
   isAuthenticated: false,
   isUnauthenticated: Ember.computed.not('isAuthenticated'),
 
   user: null,
   userID: Ember.computed.alias('user.id'),
-
-  clientID: ENV.GOOGLE_CLIENT_ID,
   permissions: [INSTALL_SCOPE, FILE_SCOPE, OPENID_SCOPE],
 
   authorize: function(options) {
     var finalOptions = merge({
-      client_id: this.clientID,
       scope: this.permissions,
       authuser: -1,
       immediate: false
