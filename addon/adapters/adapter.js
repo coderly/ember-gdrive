@@ -6,12 +6,17 @@ import ChangeObserver from 'ember-gdrive/lib/change-observer';
 
 import { modelKey } from 'ember-gdrive/lib/util';
 
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
 var Adapter = DS.Adapter.extend({
   defaultSerializer: '-google-drive',
 
   documentSource: null,
   document: Ember.computed.alias('documentSource.document'),
   namespace: 'v1',
+  
 
   ref: function() {
     var ref = this.get('document.ref'),
@@ -21,10 +26,10 @@ var Adapter = DS.Adapter.extend({
   }.property('document.ref', 'namespace'),
 
   recordCreatedRemotely: function(store, typeKey, data) {
-    store.push(typeKey, data);
+    store.push(typeKey, clone(data));
   },
   recordUpdatedRemotely: function(store, typeKey, data) {
-    store.push(typeKey, data);
+    store.push(typeKey, clone(data));
   },
   recordDeletedRemotely: function(store, typeKey, id) {
     var deletedRecord = store.getById(typeKey, id);
@@ -32,10 +37,10 @@ var Adapter = DS.Adapter.extend({
   },
 
   recordCreatedLocally: function(store, typeKey, data) {
-    store.push(typeKey, data);
+    store.push(typeKey, clone(data));
   },
   recordUpdatedLocally: function(store, typeKey, data, e) {
-    store.push(typeKey, data);
+    store.push(typeKey, clone(data));
   },
   recordDeletedLocally: function(store, typeKey, id) {
     var deletedRecord = store.getById(typeKey, id);
@@ -62,7 +67,7 @@ var Adapter = DS.Adapter.extend({
 
   find: function(store, type, id) {
     this.observeRecordData(store, type.typeKey, id);
-    return Ember.RSVP.resolve( this.get('ref').get(modelKey(type), id).value() );
+    return Ember.RSVP.resolve(clone(this.get('ref').get(modelKey(type), id).value()));
   },
 
   createRecord: function(store, type, record) {
@@ -76,7 +81,7 @@ var Adapter = DS.Adapter.extend({
 
     this.observeRecordData(store, type.typeKey, id);
 
-    return Ember.RSVP.resolve( this.get('ref').get(modelKey(type), id).value() );
+    return Ember.RSVP.resolve( clone(this.get('ref').get(modelKey(type), id).value()) );
   },
 
   updateRecord: function(store, type, record) {
@@ -90,13 +95,13 @@ var Adapter = DS.Adapter.extend({
 
     this.observeRecordData(store, type.typeKey, id);
 
-    return Ember.RSVP.resolve( ref.get(modelKey(type), id).value() );
+    return Ember.RSVP.resolve( clone(ref.get(modelKey(type), id).value()) );
   },
 
   findAll: function(store, type) {
     var adapter = this,
         ref = this.get('ref'),
-        identityMap = ref.get(modelKey(type)).value() || {},
+        identityMap = clone(ref.get(modelKey(type)).value() || {}),
         keys = ref.get(modelKey(type)).keys(),
         serializedRecords = [];
 
