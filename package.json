@@ -3,12 +3,13 @@
   "version": "0.6.0",
   "devDependencies": {
     "brfs": "0.0.8",
+    "ember-cli-simple-auth": "^0.7.1",
     "jshint": "~0.9"
   },
   "directories": {
     "lib": "lib"
   },
-  "keywords": [ 
+  "keywords": [
     "ember-addon"
   ],
   "ember-addon": {
