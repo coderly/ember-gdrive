@@ -14,7 +14,7 @@ var Authenticator = Base.extend({
     var authenticator = this;
     return authenticator.get('auth').authorizeImmediate({
       login_hint: this.inferUserId(),
-      client_id: Config.ENV.GOOGLE_CLIENT_ID
+      client_id: Config['ember-gdrive'].GOOGLE_CLIENT_ID
     }).then(function () {
       return authenticator.get('auth').fetchCurrentUser();
     });
@@ -22,7 +22,7 @@ var Authenticator = Base.extend({
 
   authenticate: function (options) {
     var authenticator = this;
-    return authenticator.get('auth').authorize(Ember.merge(options, { client_id: Config.ENV.GOOGLE_CLIENT_ID })).then(function () {
+    return authenticator.get('auth').authorize(Ember.merge(options, { client_id: Config['ember-gdrive'].GOOGLE_CLIENT_ID })).then(function () {
       return authenticator.get('auth').fetchCurrentUser();
     });
   },
