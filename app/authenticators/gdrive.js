@@ -2,7 +2,7 @@ import Ember from 'ember';
 import Base from 'simple-auth/authenticators/base';
 import Auth from 'ember-gdrive/lib/auth';
 import Cache from 'ember-gdrive/lib/local-cache';
-import Config from 'storypad/config/environment';
+import Config from '../config/environment';
 
 var Authenticator = Base.extend({
   
