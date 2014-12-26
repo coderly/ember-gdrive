@@ -2,7 +2,7 @@ import Ember from 'ember';
 import Base from 'simple-auth/authenticators/base';
 import Auth from 'ember-gdrive/lib/auth';
 import Cache from 'ember-gdrive/lib/local-cache';
-import Config from '../config/environment';
+import config from 'ember-gdrive/lib/config';
 
 var Authenticator = Base.extend({
   
@@ -14,7 +14,7 @@ var Authenticator = Base.extend({
     var authenticator = this;
     return authenticator.get('auth').authorizeImmediate({
       login_hint: this.inferUserId(),
-      client_id: Config['ember-gdrive'].GOOGLE_CLIENT_ID
+      client_id: config.get('GOOGLE_CLIENT_ID')
     }).then(function () {
       return authenticator.get('auth').fetchCurrentUser();
     });
@@ -22,7 +22,7 @@ var Authenticator = Base.extend({
 
   authenticate: function (options) {
     var authenticator = this;
-    return authenticator.get('auth').authorize(Ember.merge(options, { client_id: Config['ember-gdrive'].GOOGLE_CLIENT_ID })).then(function () {
+    return authenticator.get('auth').authorize(Ember.merge(options, { client_id: config.get('GOOGLE_CLIENT_ID') })).then(function () {
       return authenticator.get('auth').fetchCurrentUser();
     });
   },

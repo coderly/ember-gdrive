@@ -1,10 +1,10 @@
 import Ember from 'ember';
-import Config from '../config/environment';
+import config from 'ember-gdrive/lib/config';
 
 export default Ember.Object.extend(Ember.Evented, {
   token: null,
-  apiKey: Config['ember-gdrive'].GOOGLE_API_KEY,
-  mimeTypes: Config['ember-gdrive'].GOOGLE_MIME_TYPE,
+  apiKey: config.get('GOOGLE_API_KEY'),
+  mimeTypes: config.get('GOOGLE_MIME_TYPE'),
 
   show: function() {
     this.get('googlePicker').setVisible(true);
