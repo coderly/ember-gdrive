@@ -47,10 +47,6 @@ var Serializer = DS.JSONSerializer.extend({
     } else {
       this._super(record, json, relationship);
     }
-  },
-  
-  normalizePayload: function(payload) {
-    return JSON.parse(JSON.stringify(payload));
   }
 });
 
