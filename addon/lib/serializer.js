@@ -48,7 +48,6 @@ var Serializer = DS.JSONSerializer.extend({
       this._super(record, json, relationship);
     }
   }
-
 });
 
 export default Serializer;
