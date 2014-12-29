@@ -1,3 +1,4 @@
+import Ember from 'ember';
 import DS from 'ember-data';
 import { recordKey } from 'ember-gdrive/lib/util';
 
@@ -47,8 +48,11 @@ var Serializer = DS.JSONSerializer.extend({
     } else {
       this._super(record, json, relationship);
     }
+  },
+  
+  normalizePayload: function(payload) {
+    return JSON.parse(JSON.stringify(payload));
   }
-
 });
 
 export default Serializer;
