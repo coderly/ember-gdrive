@@ -46,7 +46,12 @@ MapReference.isFor = function (data) {
 MapReference.serialize = function (object) {
   var serialized = {};
   object.items().forEach(function (pair) {
-    serialized[pair[0]] = serialize(pair[1]);
+    if (pair[1] instanceof Array) {
+      // gapi returns array properties with non-writable elements, so we need to remap them as a temporary fix
+      serialized[pair[0]] = serialize(pair[1]).map(function (item) { return item; });
+    } else {
+      serialized[pair[0]] = serialize(pair[1]);
+    } 
   });
   return serialized;
 };
