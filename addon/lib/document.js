@@ -1,5 +1,6 @@
 import Ember from 'ember';
 import MapReference from 'ember-gdrive/lib/reference/map-reference';
+import config from 'ember-gdrive/lib/config';
 
 var Document = Ember.Object.extend(Ember.Evented, {
   id: null,
@@ -177,7 +178,7 @@ Document.reopenClass({
     return new Ember.RSVP.Promise(function(resolve, reject) {
       gapi.client.drive.files.insert({
         'resource': {
-          mimeType: ENV.GOOGLE_MIME_TYPE,
+          mimeType: config.get('GOOGLE_MIME_TYPE'),
           title: Ember.get(params, 'title')
         }
       }).execute(function(d){ Ember.run(null, resolve, d); });
