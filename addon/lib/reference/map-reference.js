@@ -1,37 +1,27 @@
-import Ember from 'ember';
-
-var NullReference, serialize;
-
-var isPlainObject = function (o) {
-  // This doesn't work for basic objects such as Object.create(null)
-  return Object(o) === o && Object.getPrototypeOf(o) === Object.prototype;
-};
-
-var isCollaborativeList = function (object) {
-  return object &&
-    object.hasOwnProperty('insertAll') &&
-    object.hasOwnProperty('pushAll') &&
-    object.hasOwnProperty('removeRange');
-};
-
-var get = function () {
-  if (Ember.isArray(arguments[0])) {
-    return get.apply(this, arguments[0]);
-  }
-
-  var components = arguments;
-  var cur = this;
-  for (var i = 0; i < components.length; i++) {
-    cur = cur._get(components[i]);
-  }
-  return cur;
-};
+import ListReference from 'ember-gdrive/lib/reference/list-reference';
+import NullReference from 'ember-gdrive/lib/reference/null-reference';
+import get from 'ember-gdrive/lib/reference/get';
 
 var MapReference = function (model, parent, key, data) {
   this.model = model;
   this.parent = parent;
   this.key = key;
   this.data = data;
+};
+
+var _isPlainObject = function (o) {
+  // This doesn't work for basic objects such as Object.create(null)
+  return Object(o) === o && Object.getPrototypeOf(o) === Object.prototype;
+};
+
+var _serialize = function (object) {
+  if (MapReference.isFor(object)) {
+    return MapReference.serialize(object);
+  } else if (ListReference.isFor(object)) {
+    return ListReference.serialize(object);
+  } else {
+    return object;
+  }
 };
 
 MapReference.isFor = function (data) {
@@ -48,10 +38,12 @@ MapReference.serialize = function (object) {
   object.items().forEach(function (pair) {
     if (pair[1] instanceof Array) {
       // gapi returns array properties with non-writable elements, so we need to remap them as a temporary fix
-      serialized[pair[0]] = serialize(pair[1]).map(function (item) { return item; });
+      serialized[pair[0]] = _serialize(pair[1]).map(function (item) {
+        return item;
+      });
     } else {
-      serialized[pair[0]] = serialize(pair[1]);
-    } 
+      serialized[pair[0]] = _serialize(pair[1]);
+    }
   });
   return serialized;
 };
@@ -88,7 +80,7 @@ MapReference.prototype.set = function (value) {
     if (arguments[1] !== undefined) {
       this.data.set(arguments[0], this._coerce(arguments[1]));
     }
-  } else if (isPlainObject(value)) {
+  } else if (_isPlainObject(value)) {
 
     var keys = Object.keys(value);
     for (var i = 0; i < keys.length; i++) {
@@ -104,7 +96,7 @@ MapReference.prototype.set = function (value) {
 };
 
 MapReference.prototype.value = function () {
-  return serialize(this.data);
+  return _serialize(this.data);
 };
 
 MapReference.prototype.delete = function (key) {
@@ -128,7 +120,7 @@ MapReference.prototype.changed = function (handler) {
 };
 
 MapReference.prototype._coerce = function (value) {
-  if (isPlainObject(value)) {
+  if (_isPlainObject(value)) {
     return this.model.createMap(value);
   } else {
     return value;
@@ -136,79 +128,8 @@ MapReference.prototype._coerce = function (value) {
 };
 
 MapReference.prototype.value = function () {
-  return serialize(this.data);
+  return _serialize(this.data);
 };
 
-var NullReference = function (model, parent, key) {
-  this.model = model;
-  this.parent = parent;
-  this.key = key;
-};
-
-NullReference.isFor = function (data) {
-  return data === null;
-};
-
-NullReference.prototype.path = function (key) {
-  return this.parent.path(this.key) + (key ? '/' + key : '');
-};
-
-NullReference.prototype.keys = function () {
-  return [];
-};
-
-NullReference.prototype.get = function (key, __components) {
-  return get.apply(this, arguments);
-};
-
-NullReference.prototype._get = function (key) {
-  return new NullReference(this.model, this, key);
-};
-
-NullReference.prototype.set = function (value) {
-  var map = this.materialize();
-  map.set(value);
-  return map;
-};
-
-NullReference.prototype.delete = function (key) {
-  return this;
-};
-
-NullReference.prototype.value = function () {
-  return null;
-};
-
-NullReference.prototype.materialize = function () {
-  var parent = this.parent.materialize();
-  parent.set(
-    this.key,
-    this.model.createMap()
-  );
-
-  return parent.get(this.key);
-};
-
-NullReference.prototype.changed = function () {
-  Ember.assert('You must materialize a NullReference before adding a listener to ' + this.path(), false);
-};
-
-var serializeList = function (object) {
-  var serialized = [];
-  object.asArray().forEach(function (item) {
-    serialized.push(serialize(item));
-  });
-  return serialized;
-};
-
-var serialize = function (object) {
-  if (MapReference.isFor(object)) {
-    return MapReference.serialize(object);
-  } else if (isCollaborativeList(object)) {
-    return serializeList(object);
-  } else {
-    return object;
-  }
-};
-
-export default MapReference;
+export
+default MapReference;

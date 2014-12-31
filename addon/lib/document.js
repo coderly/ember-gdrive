@@ -1,5 +1,5 @@
 import Ember from 'ember';
-import Reference from 'ember-gdrive/lib/reference';
+import MapReference from 'ember-gdrive/lib/reference/map-reference';
 import config from 'ember-gdrive/lib/config';
 
 var Document = Ember.Object.extend(Ember.Evented, {
@@ -39,7 +39,7 @@ var Document = Ember.Object.extend(Ember.Evented, {
     var model = googleDocument.getModel();
     var root = model.getRoot();
 
-    return new Reference(model, null, null, root);
+    return new MapReference(model, null, null, root);
   }.property('content').readOnly(),
 
   meta: {},
