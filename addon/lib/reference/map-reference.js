@@ -1,4 +1,3 @@
-import ListReference from 'ember-gdrive/lib/reference/list-reference';
 import NullReference from 'ember-gdrive/lib/reference/null-reference';
 import get from 'ember-gdrive/lib/reference/get';
 
@@ -17,8 +16,6 @@ var _isPlainObject = function (o) {
 var _serialize = function (object) {
   if (MapReference.isFor(object)) {
     return MapReference.serialize(object);
-  } else if (ListReference.isFor(object)) {
-    return ListReference.serialize(object);
   } else {
     return object;
   }
@@ -66,6 +63,7 @@ MapReference.prototype.get = function (key, __components) {
 
 MapReference.prototype._get = function (key) {
   var childData = this.data.get(key);
+  
   if (NullReference.isFor(childData)) {
     return new NullReference(this.model, this, key);
   } else if (MapReference.isFor(childData)) {
@@ -127,9 +125,4 @@ MapReference.prototype._coerce = function (value) {
   }
 };
 
-MapReference.prototype.value = function () {
-  return _serialize(this.data);
-};
-
-export
-default MapReference;
+export default MapReference;
