@@ -60,7 +60,7 @@ export default Ember.Component.extend({
 
   loadData: function () {
     var component = this,
-      store = component.get('targetObject.store');
+      store = component.get('store');
     store.unloadAll('google-drive-permission');
     store.find('google-drive-permission').then(function (permissions) {
       component.set('permissions', permissions);
@@ -69,7 +69,7 @@ export default Ember.Component.extend({
 
   share: function () {
     var component = this;
-    var permission = component.get('targetObject.store').createRecord('google-drive-permission', {
+    var permission = component.get('store').createRecord('google-drive-permission', {
       emailAddress: this.get('shareAddress'),
       type: 'user', // user, group, domain, anyone
       role: 'writer' // owner, reader, writer
