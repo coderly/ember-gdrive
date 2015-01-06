@@ -1,6 +1,7 @@
 {
   "name": "ember-gdrive",
   "version": "0.6.0",
+  "repository": "https://github.com/coderly/ember-gdrive",
   "devDependencies": {
     "brfs": "0.0.8",
     "ember-cli-simple-auth": "^0.7.1",
