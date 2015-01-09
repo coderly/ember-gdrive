@@ -23,10 +23,7 @@ var _serialize = function (object) {
 
 MapReference.isFor = function (data) {
   //return data instanceof gapi.drive.realtime.CollaborativeMap;
-  return data &&
-    data.hasOwnProperty('size') &&
-    data.hasOwnProperty('keys') &&
-    data.hasOwnProperty('values');
+  return data && data.type === 'Map';
 };
 
 // this is used for debugging purposes to get a snapshot of the Google Drive data structure
