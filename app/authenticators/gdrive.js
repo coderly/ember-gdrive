@@ -22,6 +22,7 @@ var Authenticator = Base.extend({
 
   authenticate: function (options) {
     var authenticator = this;
+    options = options || {};
     return authenticator.get('auth').authorize(Ember.merge(options, { client_id: config.get('GOOGLE_CLIENT_ID') })).then(function () {
       return authenticator.get('auth').fetchCurrentUser();
     });
