@@ -8,17 +8,9 @@ module.exports = {
   afterInstall: function (options) {
     var addonContext = this;
 
-    return this.addBowerPackageToProject('ember-simple-auth')
+    return this.addBowerPackageToProject('ember-simple-auth', '~0.7.2')
       .then(function () {
-        return addonContext.addPackageToProject('ember-cli-simple-auth');
+        return addonContext.addAddonToProject('ember-cli-simple-auth', '~0.7.2');
       });
-  },
-  
-  afterUninstall: function (options) {
-    // Ideally, we would remove the extra packages we added during 'afterInstall'
-    // from within this hook. However, no such option seems to be available at the  
-    // moment
-    
-    // In fact, I'm not even finding an ember uninstall:<type> command at the moment
   }
 };
