@@ -14,5 +14,7 @@ export default {
     application.inject('route', 'documentSource', 'document-source:main');
     application.inject('controller', 'documentSource', 'document-source:main');
     application.inject('adapter:application', 'documentSource', 'document-source:main');
+    application.inject('adapter:google-drive-permission', 'documentSource', 'document-source:main');
+    application.inject('component:document-creator', 'documentSource', 'document-source:main');
   }
 };

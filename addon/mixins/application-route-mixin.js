@@ -23,9 +23,7 @@ export default Ember.Mixin.create(ApplicationRouteMixin, {
         return documentSource.createFromState();
       }
     }).then(function (doc) {
-      if (doc) {
-        route.transitionTo('document', doc);
-      }
+        route.transitionToDocument(doc);
     });
   },
   
@@ -40,6 +38,15 @@ export default Ember.Mixin.create(ApplicationRouteMixin, {
       session.invalidate().then(function () {
         route.transitionTo('login');
       });
+    },
+    documentCreated: function (doc) {
+      this.transitionToDocument(doc);
+    }
+  },
+  
+  transitionToDocument: function (doc) {
+    if (doc) {
+      this.transitionTo('document', doc);
     }
   }
 });
