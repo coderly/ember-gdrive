@@ -154,10 +154,9 @@ Document.reopenClass({
           throw new Error('Token refresh required');
         } else if(e.type === gapi.drive.realtime.ErrorType.CLIENT_ERROR) {
           throw new Error('An Error happened: ' + e.message);
-        } else if(e.type === gapi.drive.realtime.ErrorType.NOT_FOUND) {
+        } else if(e.type === gapi.drive.realtime.ErrorType.NOT_FOUND || e.type === gapi.drive.realtime.ErrorType.FORBIDDEN) {
           throw new Error('The file was not found. It does not exist or you do not have read access to the file.');
-        }
-        else {
+        } else {
           throw new Error('Unknown error occured.');
         }
       });
