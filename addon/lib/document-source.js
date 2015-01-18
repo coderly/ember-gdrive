@@ -37,6 +37,16 @@ var DocumentSource = Ember.Object.extend({
       return Ember.RSVP.Promise.reject('failed to create');
     }
   },
+  
+  createManually: function (title) {
+    var documentSource = this;
+    if (!Ember.isEmpty(title)) {
+      return Document.create({title: title}).then(function(doc) {
+        documentSource.set('document', doc);
+        return doc;
+      });
+    }  
+  },
 
   load: function(documentId) {
     Ember.assert('Document with id ' + this.get('id') + ' was already loaded', !this.get('isLoaded'));
