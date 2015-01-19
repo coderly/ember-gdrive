@@ -1,3 +1,7 @@
+.share-modal * {
+  box-sizing: border-box;
+}
+
 .share-modal-wrapper {
   position: fixed;
   display: none;
@@ -17,7 +21,6 @@
 
 .share-modal {
   width: 500px;
-  //min-height: 300px;
   overflow:hidden;
   background-color: #FFF;
   border: 1px solid #DDD;
@@ -31,7 +34,6 @@
 .share-modal .share-modal-head{
   padding: 10px;
   border-bottom: 1px solid #DDD;
-  //background-color: $brand-light;
 }
 
 .share-modal .share-modal-body {
@@ -40,6 +42,8 @@
 }
 
 .share-modal .share-modal-body ul {
+  margin: 0;
+  padding: 0;
   margin-left: -10px;
 }
 
@@ -53,31 +57,13 @@
   text-align: center;        
 }
 
-.share-modal .share-modal-body form {
-  margin: 10px 0;
-}
-
-.share-modal .share-modal-body form input {
-  margin: 10px 0;
-  display: inline-block;
-}
-
-.share-modal .share-modal-body form input[type=submit] {
-  margin-left: 10px;
-  width: 100px;
-}
-
-.share-modal .share-modal-body form input[type=text] {
-  width: calc(100% - 120px);
-}
-
 .share-modal .share-modal-footer {
   padding:10px;
   border-top: 1px solid #DDD;
   background:#f4f4f4;
 }
 
-.share-modal .share-modal-footer .button {
+.share-modal .share-modal-footer button {
   float:right;
   margin: 0;
 }
@@ -89,4 +75,41 @@
 }
 .share-modal .share-modal-footer:after {
     clear: both;
+}
+
+.share-modal form {
+  margin: 10px 0;
+}
+
+.share-modal input, .share-modal button {
+	display: block;
+  height: 35px;
+	padding: 0 10px;
+  margin: 10px 0;
+  display: inline-block;
+  
+  border: 1px solid #e1e1e1;
+
+  -webkit-border-radius: 3px;
+     -moz-border-radius: 3px;
+      -ms-border-radius: 3px;
+          border-radius: 3px;
+
+  font-weight: 400;
+  font-size: 14px;
+  color: #535353;
+}
+
+.share-modal input[type=submit], .share-modal button {
+  cursor: pointer;
+}
+
+.share-modal input[type=submit] {
+  width: 100px;
+  margin-left: 10px;
+}
+
+.share-modal input[type=text] {
+  width: calc(100% - 120px);
+  margin-left: 0;
 }
