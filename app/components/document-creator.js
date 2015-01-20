@@ -18,7 +18,7 @@ export default Ember.Component.extend({
 
       this.set('isCreating', true);
 
-      return this.get('documentSource').createManually(title).then(function (doc) {
+      return this.get('documentSource').createDocument(title).then(function (doc) {
         component.sendAction('documentCreated', doc);
         component.set('isCreating', false);
       }, function (error) {
