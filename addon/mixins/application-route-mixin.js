@@ -45,8 +45,6 @@ export default Ember.Mixin.create(ApplicationRouteMixin, {
   },
   
   transitionToDocument: function (doc) {
-    if (doc) {
-      this.transitionTo('document', doc);
-    }
+    this.transitionTo('document', doc);
   }
 });
