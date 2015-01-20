@@ -38,7 +38,7 @@ var DocumentSource = Ember.Object.extend({
     }
   },
   
-  createManually: function (title) {
+  createDocument: function (title) {
     var documentSource = this;
     if (!Ember.isEmpty(title)) {
       return Document.create({title: title}).then(function(doc) {
