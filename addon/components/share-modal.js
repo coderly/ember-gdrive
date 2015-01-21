@@ -7,7 +7,15 @@ export default Ember.Component.extend({
   classNameBindings: ['isOpen:open'],
   
   shareAddress: null,
+  permissions: [],
+  isLoaded: false,
+  isError: false,
   isOpen: false,
+  
+  showError: Ember.computed.and('isLoaded', 'isError'),
+  showData: function () {
+    return this.get('isLoaded') && !this.get('isError');
+  }.property('isLoaded', 'isError'),
 
   onOpening: function () {
     this.loadData();
@@ -61,9 +69,17 @@ export default Ember.Component.extend({
   loadData: function () {
     var component = this,
       store = component.get('store');
+    
+    component.set('isLoaded', false);
+    component.set('isError', false);
+    
     store.unloadAll('google-drive-permission');
     store.find('google-drive-permission').then(function (permissions) {
       component.set('permissions', permissions);
+      component.set('isLoaded', true);
+    }, function () {
+      component.set('isLoaded', true);
+      component.set('isError', true);
     });
   },
 
@@ -84,7 +100,7 @@ export default Ember.Component.extend({
 
   removePermission: function (permission) {
     var component = this;
-    if (confirm('Are you sure?')) {
+    if (confirm('Are you sure you wish to revoke this user\'s access to the current document?')) {
       permission.deleteRecord();
       permission.save().then(null, function (error) {
         permission.rollback();

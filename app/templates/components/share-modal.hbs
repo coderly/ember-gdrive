@@ -1,28 +1,39 @@
 {{#if isOpen}}
-  <div class="share-modal">
+<div class="share-modal">
 
-    <div class="share-modal-head">
-      <h1>Share document</h1>
-    </div>
+  <div class="share-modal-head">
+    <h1>Share document</h1>
+  </div>
 
-    <div class="share-modal-body">
-      <h1>Users with access to document</h1>
+  <div class="share-modal-body">
+    {{#unless isLoaded}}
+      <em>Retrieving data...</em>
+    {{/unless}} 
+    {{#if showError}}
+      <em>Error retrieving permissions for this document.</em>
+    {{/if}} 
+    {{#if showData}}
+      <h2>Users with access to document</h1>
+      <em>Click on a user to remove their access right.</em>
       <ul>
         {{#each permission in permissions}}
-        <li><a {{action 'removePermission' permission}}>{{#if permission.name}}{{permission.name}} {{permission.emailAddress}}{{else}}{{permission.emailAddress}}{{/if}}</a>
+        <li>
+          <a {{action 'removePermission' permission}}>
+          {{#if permission.name}}{{permission.name}} {{permission.emailAddress}}{{else}}{{permission.emailAddress}}{{/if}}
+          </a>
         </li>
         {{/each}}
       </ul>
-
-      <h1>Share with more users</h1>
+      <h2>Share with more users</h1>
       <form action 'share' on="submit">
         {{input placeholder="Type e-mail" value=shareAddress }}
         <input type="submit" value="Share" {{action 'share'}}/>
       </form>
-    </div>
-
-    <div class="share-modal-footer">
-      <button {{action 'close'}} class="button regular">Close</button>
-    </div>
+    {{/if}}
   </div>
+
+  <div class="share-modal-footer">
+    <button {{action 'close'}} class="button regular">Close</button>
+  </div>
+</div>
 {{/if}}
