@@ -41,7 +41,7 @@ var Authenticator = Base.extend({
   },
   
   getDocumentIdFromLocation: function () {
-    return location.href.split('/#/d/')[1].split('/')[0];
+    return location.href.split('/d/')[1].split('/')[0];
   },
   
   inferUserId: function() {
