@@ -92,6 +92,7 @@ export default Ember.Component.extend({
     });
     permission.save().then(function () {
       component.set('shareAddress', null);
+      component.loadData();
     }, function (error) {
       permission.rollback();
       alert(error.message);

@@ -19,7 +19,7 @@
         {{#each permission in permissions}}
         <li>
           <a {{action 'removePermission' permission}}>
-          {{#if permission.name}}{{permission.name}} {{permission.emailAddress}}{{else}}{{permission.emailAddress}}{{/if}}
+          {{#if permission.name}}{{permission.name}} ({{permission.emailAddress}}){{else}}{{permission.emailAddress}}{{/if}}
           </a>
         </li>
         {{/each}}

@@ -57,6 +57,10 @@
   text-align: center;        
 }
 
+.share-modal .share-modal-body ul li a {
+  display: block;
+}
+
 .share-modal .share-modal-footer {
   padding:10px;
   border-top: 1px solid #DDD;
