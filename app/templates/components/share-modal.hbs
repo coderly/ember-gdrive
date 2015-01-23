@@ -14,13 +14,11 @@
     {{/if}} 
     {{#if showData}}
       <h2>Users with access to document</h1>
-      <em>Click on a user to remove their access right.</em>
-      <ul>
+      <ul class="permission-list">
         {{#each permission in permissions}}
-        <li>
-          <a {{action 'removePermission' permission}}>
-          {{#if permission.name}}{{permission.name}} ({{permission.emailAddress}}){{else}}{{permission.emailAddress}}{{/if}}
-          </a>
+        <li class="permission-item">
+          <span>{{#if permission.name}}{{permission.name}} ({{permission.emailAddress}}){{else}}{{permission.emailAddress}}{{/if}}</span>
+          <a {{action 'removePermission' permission}}></a>
         </li>
         {{/each}}
       </ul>
