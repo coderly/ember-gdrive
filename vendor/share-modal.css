@@ -41,22 +41,6 @@
   min-height:200px;
 }
 
-.share-modal .share-modal-body ul {
-  margin: 0;
-  padding: 0;
-  margin-left: -10px;
-}
-
-.share-modal .share-modal-body ul li {
-  color: #333;
-  display: inline-block;
-  margin: 10px;
-  border: 1px solid #DDD;
-  padding: 10px;
-  box-sizing:border-box;
-  text-align: center;        
-}
-
 .share-modal .share-modal-footer {
   padding:10px;
   border-top: 1px solid #DDD;
@@ -113,3 +97,48 @@
   width: calc(100% - 120px);
   margin-left: 0;
 }
+
+.share-modal .permission-list {
+  margin: 0;
+  margin-left: -10px;
+  padding: 0;
+}
+
+.share-modal .permission-list .permission-item {
+  color: #333;
+  display: inline-block;
+  margin: 5px 10px;
+  
+  border: 1px solid #DDD;
+  -webkit-border-radius: 2px;
+     -moz-border-radius: 2px;
+      -ms-border-radius: 2px;
+          border-radius: 2px;
+  
+  padding: 10px;
+  box-sizing:border-box;
+  text-align: center;    
+  cursor: default;
+}
+
+.share-modal .permission-list .permission-item span {
+  vertical-align: middle;
+}
+
+.share-modal .permission-list .permission-item a {
+  vertical-align: middle;
+  font-weight: bold;
+  cursor: pointer;
+  color: gray;
+  margin-left: 5px;
+}
+
+.share-modal .permission-list .permission-item a:hover {
+  color: black;
+}
+
+.share-modal .permission-list .permission-item a:before {
+  display: inline-block;
+  content: 'x';
+}
+
