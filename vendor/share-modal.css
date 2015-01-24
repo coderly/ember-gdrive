@@ -1,8 +1,8 @@
-.share-modal * {
+share-modal * {
   box-sizing: border-box;
 }
 
-.share-modal-wrapper {
+share-modal {
   position: fixed;
   display: none;
   align-items: center;
@@ -15,11 +15,11 @@
   z-index: 999999;
 }
 
-.share-modal-wrapper.open{
+share-modal.open{
   display: flex;
 }
 
-.share-modal {
+share-modal .share-modal-body {
   width: 500px;
   overflow:hidden;
   background-color: #FFF;
@@ -31,41 +31,42 @@
   box-shadow: 2px 2px 5px #ddd;
 }
 
-.share-modal .share-modal-head{
+share-modal .share-modal-header{
   padding: 10px;
   border-bottom: 1px solid #DDD;
 }
 
-.share-modal .share-modal-body {
+share-modal .share-modal-content {
   padding: 10px;
   min-height:200px;
 }
 
-.share-modal .share-modal-footer {
+share-modal .share-modal-footer {
   padding:10px;
   border-top: 1px solid #DDD;
   background:#f4f4f4;
 }
 
-.share-modal .share-modal-footer button {
+share-modal .share-modal-footer button {
   float:right;
   margin: 0;
 }
 
-.share-modal .share-modal-footer:before,
-.share-modal .share-modal-footer:after {
+share-modal .share-modal-footer:before,
+share-modal .share-modal-footer:after {
     content: '';
     display: table;
 }
-.share-modal .share-modal-footer:after {
+share-modal .share-modal-footer:after {
     clear: both;
 }
 
-.share-modal form {
+share-modal form {
   margin: 10px 0;
 }
 
-.share-modal input, .share-modal button {
+share-modal input, 
+share-modal button {
 	display: block;
   height: 35px;
 	padding: 0 10px;
@@ -84,27 +85,28 @@
   color: #535353;
 }
 
-.share-modal input[type=submit], .share-modal button {
+share-modal input[type=submit], 
+share-modal button {
   cursor: pointer;
 }
 
-.share-modal input[type=submit] {
+share-modal input[type=submit] {
   width: 100px;
   margin-left: 10px;
 }
 
-.share-modal input[type=text] {
+share-modal input[type=text] {
   width: calc(100% - 120px);
   margin-left: 0;
 }
 
-.share-modal .permission-list {
+share-modal .permission-list {
   margin: 0;
   margin-left: -10px;
   padding: 0;
 }
 
-.share-modal .permission-list .permission-item {
+share-modal .permission-list .permission-item {
   color: #333;
   display: inline-block;
   margin: 5px 10px;
@@ -121,11 +123,11 @@
   cursor: default;
 }
 
-.share-modal .permission-list .permission-item span {
+share-modal .permission-list .permission-item span {
   vertical-align: middle;
 }
 
-.share-modal .permission-list .permission-item a {
+share-modal .permission-list .permission-item a {
   vertical-align: middle;
   font-weight: bold;
   cursor: pointer;
@@ -133,12 +135,11 @@
   margin-left: 5px;
 }
 
-.share-modal .permission-list .permission-item a:hover {
+share-modal .permission-list .permission-item a:hover {
   color: black;
 }
 
-.share-modal .permission-list .permission-item a:before {
+share-modal .permission-list .permission-item a:before {
   display: inline-block;
   content: 'x';
 }
-
