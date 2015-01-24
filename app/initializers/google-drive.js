@@ -1,5 +1,5 @@
 import DocumentSource from 'ember-gdrive/lib/document-source';
-import GoogleDriveAdapter from 'ember-gdrive/adapters/adapter';
+import GoogleDriveAdapter from 'ember-gdrive/adapters/google-drive';
 import GoogleDriveSerializer from 'ember-gdrive/lib/serializer';
 
 export default {
