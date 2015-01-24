@@ -105,6 +105,7 @@ export default Ember.Component.extend({
       permission.save().then(null, function (error) {
         permission.rollback();
         Ember.run.once(component, component.loadData, null);
+        alert(error.message);
       });
     }
   },
