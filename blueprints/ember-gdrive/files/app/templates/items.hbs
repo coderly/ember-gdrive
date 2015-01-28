@@ -1,0 +1,10 @@
+<h2>Items</h2>
+
+{{input placeholder="Type name and hit enter" value=newItemName action='create'}}
+<ul>
+  {{#each item in model}}
+  <li>
+    <button {{action 'delete' item}} style="margin-right: 5px">Delete</button><label>{{item.name}}</label>
+  </li>
+  {{/each}}
+</ul>

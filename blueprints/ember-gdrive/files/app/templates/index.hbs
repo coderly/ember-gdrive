@@ -1,0 +1,6 @@
+{{#if session.isAuthenticated}}
+  <a href="https://drive.google.com">Go to Google Drive</a>
+  {{document-creator documentCreated='documentCreated'}}
+{{else}}
+  <button {{action 'login'}}>Login with Google</button>
+{{/if}}
