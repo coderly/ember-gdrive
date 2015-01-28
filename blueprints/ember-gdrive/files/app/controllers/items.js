@@ -1,7 +1,6 @@
 import Ember from 'ember';
 
 export default Ember.ArrayController.extend({
-  
   newItemName: '',
   
   actions: {
@@ -15,6 +14,8 @@ export default Ember.ArrayController.extend({
     
     delete: function (item) {
       item.destroyRecord();
-    }
+    },
+    
+    
   }
 });
