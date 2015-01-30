@@ -1,0 +1,13 @@
+{{#if isAccessError}}
+  <h1>That document does not exist</h1>
+
+  <p>You may be logged in as the wrong user to access this document.</p>
+
+  <a {{action 'logout'}}>Sign out and login as another user</a>
+{{else}}
+  <h1>Sorry, Something went wrong</h1>
+  {{message}}
+  <pre>
+    {{stack}}
+  </pre>
+{{/if}}
