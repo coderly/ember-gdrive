@@ -8,26 +8,26 @@ var Config = Ember.Object.extend({
 
   load: function (configuration) {
     if (configuration) {
-      if (configuration.GOOGLE_API_KEY) {
+      if (configuration.GOOGLE_API_KEY && configuration.GOOGLE_API_KEY !== '<insert here>') {
         this.set('GOOGLE_API_KEY', configuration.GOOGLE_API_KEY);
       } else {
         throw new Error('The GOOGLE_API_KEY configuration property has not been set.');
       }
       
-      if (configuration.GOOGLE_MIME_TYPE) {
+      if (configuration.GOOGLE_MIME_TYPE && configuration.GOOGLE_MIME_TYPE !== 'application/<insert here>') {
         this.set('GOOGLE_MIME_TYPE', configuration.GOOGLE_MIME_TYPE);
       } else {
         throw new Error('The GOOGLE_MIME_TYPE configuration property has not been set.');
       }
       
-      if (configuration.GOOGLE_DRIVE_SDK_APP_ID) {
+      if (configuration.GOOGLE_DRIVE_SDK_APP_ID && configuration.GOOGLE_DRIVE_SDK_APP_ID !== '<insert here>') {
         this.set('GOOGLE_DRIVE_SDK_APP_ID', configuration.GOOGLE_DRIVE_SDK_APP_ID);
       } else {
         throw new Error('The GOOGLE_DRIVE_SDK_APP_ID configuration property has not been set.');
       }
 
       
-      if (configuration.GOOGLE_CLIENT_ID) {
+      if (configuration.GOOGLE_CLIENT_ID && configuration.GOOGLE_CLIENT_ID !== '<insert here>') {
         this.set('GOOGLE_CLIENT_ID', configuration.GOOGLE_CLIENT_ID);
       } else {
         throw new Error('The GOOGLE_CLIENT_ID configuration property has not been set.');
