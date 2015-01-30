@@ -16,7 +16,6 @@ module.exports = {
         '\n      \'ember-gdrive\': {' +
         '\n        GOOGLE_API_KEY: \'<insert here>\',' +
         '\n        GOOGLE_MIME_TYPE: \'application/<insert here>\',' +
-        '\n        GOOGLE_DRIVE_SDK_APP_ID: \'<insert here>\',' +
         '\n        GOOGLE_CLIENT_ID: \'<insert here>\'' +
         '\n      },\n', {
           after: 'APP: {'

@@ -3,7 +3,6 @@ import Ember from 'ember';
 var Config = Ember.Object.extend({
   GOOGLE_API_KEY: null,
   GOOGLE_MIME_TYPE: null,
-  GOOGLE_DRIVE_SDK_APP_ID: null,
   GOOGLE_CLIENT_ID: null,
 
   load: function (configuration) {
@@ -19,14 +18,7 @@ var Config = Ember.Object.extend({
       } else {
         throw new Error('The GOOGLE_MIME_TYPE configuration property has not been set.');
       }
-      
-      if (configuration.GOOGLE_DRIVE_SDK_APP_ID && configuration.GOOGLE_DRIVE_SDK_APP_ID !== '<insert here>') {
-        this.set('GOOGLE_DRIVE_SDK_APP_ID', configuration.GOOGLE_DRIVE_SDK_APP_ID);
-      } else {
-        throw new Error('The GOOGLE_DRIVE_SDK_APP_ID configuration property has not been set.');
-      }
-
-      
+          
       if (configuration.GOOGLE_CLIENT_ID && configuration.GOOGLE_CLIENT_ID !== '<insert here>') {
         this.set('GOOGLE_CLIENT_ID', configuration.GOOGLE_CLIENT_ID);
       } else {
