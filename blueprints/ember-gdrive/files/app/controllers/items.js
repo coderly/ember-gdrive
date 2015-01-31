@@ -14,8 +14,6 @@ export default Ember.ArrayController.extend({
     
     delete: function (item) {
       item.destroyRecord();
-    },
-    
-    
+    }
   }
 });
