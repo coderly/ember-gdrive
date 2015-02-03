@@ -38,5 +38,8 @@ module.exports = {
     }
     
     return config;
+  },  
+  included: function (app) {
+    app.import('vendor/share-modal.css');
   }
 };
