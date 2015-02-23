@@ -8,6 +8,7 @@
   <div class="share-modal-content">
     {{#unless isLoaded}}
       <em>Retrieving data...</em>
+      {{partial 'loader'}}
     {{/unless}} 
     {{#if showError}}
       <em>Error retrieving permissions for this document.</em>

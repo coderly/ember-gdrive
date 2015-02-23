@@ -41,5 +41,6 @@ module.exports = {
   },  
   included: function (app) {
     app.import('vendor/share-modal.css');
+    app.import('vendor/loader.css');
   }
 };

@@ -1,6 +1,7 @@
 <h3>Create a document</h3>
 {{#if isCreating}}
   Creating document...
+  {{partial 'loader'}}
 {{else}}
   {{input type="text" value=documentTitle insert-newline="createDocument" placeholder="Type document name here"}}
   <button {{action 'createDocument'}}>Create</button>
