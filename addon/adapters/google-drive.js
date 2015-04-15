@@ -31,7 +31,7 @@ var Adapter = DS.Adapter.extend({
     store.unloadRecord(deletedRecord);
   },
 
-  recordCreatedLocally: function(store, typeKey, data) {
+  recordCreatedLocally: function(store, typeKey, data, event) {
     store.push(typeKey, data);
   },
   recordUpdatedLocally: function(store, typeKey, data) {
@@ -56,7 +56,7 @@ var Adapter = DS.Adapter.extend({
     return this.get('changeObserver').observeIdentityMap(store, typeKey);
   },
 
-  generateIdForRecord: function() {
+  generateIdForRecord: function(store, inputProperties) {
     return uuid();
   },
 
