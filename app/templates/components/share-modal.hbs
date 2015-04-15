@@ -8,12 +8,12 @@
   <div class="share-modal-content">
     {{#unless isLoaded}}
       <em>Retrieving data...</em>
-    {{/unless}} 
+    {{/unless}}
     {{#if showError}}
       <em>Error retrieving permissions for this document.</em>
-    {{/if}} 
+    {{/if}}
     {{#if showData}}
-      <h2>Users with access to document</h1>
+      <h2>Users with access to document</h2>
       <ul class="permission-list">
         {{#each permission in permissions}}
         <li class="permission-item">
@@ -22,7 +22,7 @@
         </li>
         {{/each}}
       </ul>
-      <h2>Share with more users</h1>
+      <h2>Share with more users</h2>
       <form action 'share' on="submit">
         {{input placeholder="Type e-mail" value=shareAddress }}
         <input type="submit" value="Share" {{action 'share'}}/>
