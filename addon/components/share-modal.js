@@ -1,16 +1,15 @@
-/*global gapi, alert, confirm*/
 import Ember from 'ember';
 
 export default Ember.Component.extend({
   tagName: 'share-modal',
   classNameBindings: ['isOpen:open'],
-  
+
   shareAddress: null,
   permissions: [],
   isLoaded: false,
   isError: false,
   isOpen: false,
-  
+
   showError: Ember.computed.and('isLoaded', 'isError'),
   showData: function () {
     return this.get('isLoaded') && !this.get('isError');
@@ -68,10 +67,10 @@ export default Ember.Component.extend({
   loadData: function () {
     var component = this,
       store = component.get('store');
-    
+
     component.set('isLoaded', false);
     component.set('isError', false);
-    
+
     store.unloadAll('google-drive-permission');
     store.find('google-drive-permission').then(function (permissions) {
       component.set('permissions', permissions);

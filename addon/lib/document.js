@@ -1,3 +1,4 @@
+/*global gapi*/
 import Ember from 'ember';
 import MapReference from 'ember-gdrive/lib/reference/map-reference';
 import config from 'ember-gdrive/lib/config';

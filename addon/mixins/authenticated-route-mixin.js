@@ -7,7 +7,7 @@ export default Ember.Mixin.create(AuthenticatedRouteMixin, {
     var userId = this.get('session.id');
     var docId = this.get('documentSource.document.id');
     var cache = new Cache('document_login_hint');
-    
+
     cache.set(docId, userId);
   },
 

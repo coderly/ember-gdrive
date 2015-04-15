@@ -7,17 +7,17 @@ var Adapter = DS.Adapter.extend({
   documentSource: null,
   documentId: Ember.computed.alias('documentSource.document.id'),
 
-  createRecord: function (store, type, record) {
-
-    var options = {
-      resource: {
-        value: record.get('emailAddress'),
-        type: record.get('type'),
-        role: record.get('role')
-      },
-      fileId: this.get('documentId'),
-      sendNotificationEmails: false
-    };
+  createRecord: function (store, type, snapshot) {
+    var record = snapshot.record,
+        options = {
+          resource: {
+            value: record.get('emailAddress'),
+            type: record.get('type'),
+            role: record.get('role')
+          },
+          fileId: this.get('documentId'),
+          sendNotificationEmails: false
+        };
 
     var request = gapi.client.drive.permissions.insert(options);
 
@@ -32,11 +32,12 @@ var Adapter = DS.Adapter.extend({
     });
   },
 
-  deleteRecord: function (store, type, record) {
-    var request = gapi.client.drive.permissions.delete({
-      fileId: this.get('documentId'),
-      permissionId: record.get('id')
-    });
+  deleteRecord: function (store, type, snapshot) {
+    var record = snapshot.record,
+        request = gapi.client.drive.permissions.delete({
+          fileId: this.get('documentId'),
+          permissionId: record.get('id')
+        });
 
     return new Ember.RSVP.Promise(function (resolve, reject) {
       request.execute(function (response) {

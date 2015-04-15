@@ -1,5 +1,3 @@
-/* globals localStorage*/
-
 var LocalCache = function(namespace) {
   this.namespace = namespace;
 };

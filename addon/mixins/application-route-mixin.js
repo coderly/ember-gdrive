@@ -26,7 +26,7 @@ export default Ember.Mixin.create(ApplicationRouteMixin, {
         route.transitionToDocument(doc);
     });
   },
-  
+
   actions: {
     login: function () {
       this.session.authenticate('authenticator:gdrive');
@@ -43,7 +43,7 @@ export default Ember.Mixin.create(ApplicationRouteMixin, {
       this.transitionToDocument(doc);
     }
   },
-  
+
   transitionToDocument: function (doc) {
     this.transitionTo('document', doc);
   }

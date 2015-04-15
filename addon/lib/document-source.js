@@ -1,7 +1,6 @@
 import Ember from 'ember';
 import Document from 'ember-gdrive/lib/document';
 import State from 'ember-gdrive/lib/state';
-import loader from 'ember-gdrive/lib/loader';
 
 var DocumentSource = Ember.Object.extend({
   document: null,
@@ -37,7 +36,7 @@ var DocumentSource = Ember.Object.extend({
       return Ember.RSVP.Promise.reject('failed to create');
     }
   },
-  
+
   createDocument: function (title) {
     var documentSource = this;
     if (!Ember.isEmpty(title)) {
@@ -45,7 +44,7 @@ var DocumentSource = Ember.Object.extend({
         documentSource.set('document', doc);
         return doc;
       });
-    }  
+    }
   },
 
   load: function(documentId) {

@@ -9,7 +9,7 @@ Router.map(function() {
   this.resource('document', { path: 'd/:document_id' }, function() {
       this.resource('items', { path: 'items' });
   });
-  
+
   this.resource('login');
 });
 

@@ -1,3 +1,4 @@
+/*global gapi */
 var INSTALL_SCOPE = 'https://www.googleapis.com/auth/drive.install',
     FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file',
     OPENID_SCOPE = 'openid';

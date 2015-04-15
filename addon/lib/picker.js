@@ -1,3 +1,4 @@
+/*global google*/
 import Ember from 'ember';
 import config from 'ember-gdrive/lib/config';
 

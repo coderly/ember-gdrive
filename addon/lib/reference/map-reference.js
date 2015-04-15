@@ -1,3 +1,4 @@
+/*global gapi*/
 import NullReference from 'ember-gdrive/lib/reference/null-reference';
 import get from 'ember-gdrive/lib/reference/get';
 
@@ -60,7 +61,7 @@ MapReference.prototype.get = function (key, __components) {
 
 MapReference.prototype._get = function (key) {
   var childData = this.data.get(key);
-  
+
   if (NullReference.isFor(childData)) {
     return new NullReference(this.model, this, key);
   } else if (MapReference.isFor(childData)) {
