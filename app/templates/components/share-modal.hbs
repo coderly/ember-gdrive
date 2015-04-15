@@ -23,9 +23,9 @@
         {{/each}}
       </ul>
       <h2>Share with more users</h2>
-      <form action 'share' on="submit">
+      <form {{action 'share' on="submit"}}>
         {{input placeholder="Type e-mail" value=shareAddress }}
-        <input type="submit" value="Share" {{action 'share'}}/>
+        <input type="submit" value="Share"/>
       </form>
     {{/if}}
   </div>
