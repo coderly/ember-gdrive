@@ -12,13 +12,13 @@ var Config = Ember.Object.extend({
       } else {
         throw new Error('The GOOGLE_API_KEY configuration property has not been set.');
       }
-      
+
       if (configuration.GOOGLE_MIME_TYPE && configuration.GOOGLE_MIME_TYPE !== 'application/<insert here>') {
         this.set('GOOGLE_MIME_TYPE', configuration.GOOGLE_MIME_TYPE);
       } else {
         throw new Error('The GOOGLE_MIME_TYPE configuration property has not been set.');
       }
-          
+
       if (configuration.GOOGLE_CLIENT_ID && configuration.GOOGLE_CLIENT_ID !== '<insert here>') {
         this.set('GOOGLE_CLIENT_ID', configuration.GOOGLE_CLIENT_ID);
       } else {

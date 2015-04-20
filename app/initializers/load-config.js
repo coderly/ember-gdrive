@@ -7,6 +7,6 @@ export default {
   initialize: function(container, app) {
 
     //get you setting off of the app instance
-    config.load(app.get('ember-gdrive'));    
+    config.load(app.get('ember-gdrive'));
   }
 };

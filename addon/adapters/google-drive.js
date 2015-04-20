@@ -1,7 +1,6 @@
 import Ember from 'ember';
 import DS from 'ember-data';
 import uuid from 'ember-gdrive/lib/uuid';
-import Document from 'ember-gdrive/lib/document';
 import ChangeObserver from 'ember-gdrive/lib/change-observer';
 
 import { modelKey } from 'ember-gdrive/lib/util';
@@ -12,7 +11,7 @@ var Adapter = DS.Adapter.extend({
   documentSource: null,
   document: Ember.computed.alias('documentSource.document'),
   namespace: 'v1',
-  
+
 
   ref: function() {
     var ref = this.get('document.ref'),
@@ -32,10 +31,10 @@ var Adapter = DS.Adapter.extend({
     store.unloadRecord(deletedRecord);
   },
 
-  recordCreatedLocally: function(store, typeKey, data) {
+  recordCreatedLocally: function(store, typeKey, data, event) {
     store.push(typeKey, data);
   },
-  recordUpdatedLocally: function(store, typeKey, data, e) {
+  recordUpdatedLocally: function(store, typeKey, data) {
     store.push(typeKey, data);
   },
   recordDeletedLocally: function(store, typeKey, id) {
@@ -57,7 +56,7 @@ var Adapter = DS.Adapter.extend({
     return this.get('changeObserver').observeIdentityMap(store, typeKey);
   },
 
-  generateIdForRecord: function(store, record) {
+  generateIdForRecord: function(store, inputProperties) {
     return uuid();
   },
 
@@ -66,8 +65,9 @@ var Adapter = DS.Adapter.extend({
     return Ember.RSVP.resolve(this.get('ref').get(modelKey(type), id).value());
   },
 
-  createRecord: function(store, type, record) {
-    var serializedRecord = record.serialize({includeId: true}),
+  createRecord: function(store, type, snapshot) {
+    var record = snapshot.record,
+        serializedRecord = record.serialize({includeId: true}),
         id = record.get('id'),
         ref = this.get('ref');
 
@@ -80,8 +80,9 @@ var Adapter = DS.Adapter.extend({
     return Ember.RSVP.resolve(this.get('ref').get(modelKey(type), id).value());
   },
 
-  updateRecord: function(store, type, record) {
-    var serializedRecord = record.serialize({includeId: true}),
+  updateRecord: function(store, type, snapshot) {
+    var record = snapshot.record,
+        serializedRecord = record.serialize({includeId: true}),
         id = record.get('id'),
         ref = this.get('ref');
 
@@ -114,9 +115,10 @@ var Adapter = DS.Adapter.extend({
     return Ember.RSVP.resolve( serializedRecords );
   },
 
-  deleteRecord: function(store, type, record) {
-    var ref = this.get('ref');
-    var id = record.get('id');
+  deleteRecord: function(store, type, snapshot) {
+    var record = snapshot.record,
+        ref = this.get('ref'),
+        id = record.get('id');
     ref.get(modelKey(type)).delete(id);
     return Ember.RSVP.resolve();
   },

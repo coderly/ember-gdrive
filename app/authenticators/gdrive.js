@@ -5,11 +5,11 @@ import Cache from 'ember-gdrive/lib/local-cache';
 import config from 'ember-gdrive/lib/config';
 
 var Authenticator = Base.extend({
-  
+
   auth: function () {
     return Auth.create();
   }.property(),
-  
+
   restore: function (properties) {
     var authenticator = this;
     return authenticator.get('auth').authorizeImmediate({
@@ -31,7 +31,7 @@ var Authenticator = Base.extend({
   invalidate: function () {
     return this.get('auth').close();
   },
-  
+
   extractQueryParams: function () {
     var params = {};
     location.search.substr(1).split('&').forEach(function (item) {
@@ -39,11 +39,11 @@ var Authenticator = Base.extend({
     });
     return params.state ? JSON.parse(params.state) : {};
   },
-  
+
   getDocumentIdFromLocation: function () {
     return location.href.split('/d/')[1].split('/')[0];
   },
-  
+
   inferUserId: function() {
     var userId = this.extractQueryParams().userId;
     if (!userId) {
