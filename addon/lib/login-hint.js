@@ -26,4 +26,4 @@ function _getDocumentIdFromLocation() {
   return location.href.split('/d/')[1].split('/')[0];
 }
 
-export default { cacheLoginHint, fetchLoginHint };
+export { cacheLoginHint, fetchLoginHint };
