@@ -1,7 +1,7 @@
 import Ember from 'ember';
 import Base from 'simple-auth/authenticators/base';
 import Auth from 'ember-gdrive/lib/auth';
-import { fetchLoginHint } from 'ember-drive/lib/login-hint';
+import { fetchLoginHint } from 'ember-gdrive/lib/login-hint';
 import config from 'ember-gdrive/lib/config';
 
 var Authenticator = Base.extend({
