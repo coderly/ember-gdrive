@@ -5,6 +5,8 @@ var INSTALL_SCOPE = 'https://www.googleapis.com/auth/drive.install',
 
 import Ember from 'ember';
 import loader from 'ember-gdrive/lib/loader';
+import { fetchLoginHint } from 'ember-gdrive/lib/login-hint';
+import config from 'ember-gdrive/lib/config';
 
 var merge = function(a, b) {
   return Ember.merge(a || {}, b || {});
@@ -22,6 +24,8 @@ var Auth = Ember.Object.extend({
     var finalOptions = merge({
       scope: this.permissions,
       authuser: -1,
+      login_hint: fetchLoginHint(),
+      client_id: config.get('GOOGLE_CLIENT_ID'),
       immediate: false
     }, options || {});
 
