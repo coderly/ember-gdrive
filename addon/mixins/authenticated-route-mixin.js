@@ -4,13 +4,12 @@ import AuthenticatedRouteMixin from 'simple-auth/mixins/authenticated-route-mixi
 
 export default Ember.Mixin.create(AuthenticatedRouteMixin, {
   model: function (params) {
-    var route = this;
+    return this.get('documentSource').load(params.document_id);
+  },
 
-    return this.get('documentSource').load(params.document_id).then(function (doc) {
-      var userId = route.get('session.id');
-      var documentId = route.get('documentSource.document.id');
-      cacheLoginHint(documentId, userId);
-      return doc;
-    });
+  afterModel: function (document, transition) {
+    var userId = this.get('session.secure.id');
+    var documentId = this.get('documentSource.id');
+    cacheLoginHint(documentId, userId);
   }
 });
