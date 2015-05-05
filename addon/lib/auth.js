@@ -24,7 +24,6 @@ var Auth = Ember.Object.extend({
     var finalOptions = merge({
       scope: this.permissions,
       authuser: -1,
-      login_hint: fetchLoginHint(),
       client_id: config.get('GOOGLE_CLIENT_ID'),
       immediate: false
     }, options || {});
@@ -46,8 +45,9 @@ var Auth = Ember.Object.extend({
 
   authorizeImmediate: function(options) {
     return this.authorize(merge({
+      login_hint: fetchLoginHint(),
       immediate: true
-    }, options));
+    }, options || {}));
   },
 
   fetchCurrentUser: function() {
