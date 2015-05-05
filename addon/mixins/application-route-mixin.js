@@ -11,20 +11,17 @@ export default Ember.Mixin.create(ApplicationRouteMixin, {
     var state = documentSource.get('state'); // Forces creation of the state, which clears the query params
     var isStatePresent = state.get('isOpen') || state.get('isCreate');
 
-    if (!isStatePresent) {
-      return;
+    if (isStatePresent) {
+      this.get('session').authenticate('authenticator:gdrive', { 'login_hint': state.get('userID') }).then(function () {
+        if (state.get('isOpen')) {
+          return documentSource.openFromState();
+        } else {
+          return documentSource.createFromState();
+        }
+      }).then(function (doc) {
+          route.transitionToDocument(doc);
+      });
     }
-
-    this.get('session').authenticate('authenticator:gdrive').then(function () {
-
-      if (state.get('isOpen')) {
-        return documentSource.openFromState();
-      } else {
-        return documentSource.createFromState();
-      }
-    }).then(function (doc) {
-        route.transitionToDocument(doc);
-    });
   },
 
   actions: {
